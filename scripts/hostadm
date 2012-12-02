@@ -712,32 +712,6 @@ sub dispatch_rrd {
                                      "GPRINT:memusedpct:LAST:Last\\:%6.2lf",
                                      "COMMENT:                  $lastupdate\\n");
                     
-                    #push @dpayload, ("--font=TITLE:9:Arial",
-                    #                 "--font=LEGEND:7:.",
-                    #                 "--title=$host",
-                    #                 "--color=BACK#e0e0e0",
-                    #                 "--upper-limit=100",
-                    #                 "--height=100",
-                    #                 "--width=420",
-                    #                 "--vertical-label=% Utilization",
-                    #                 "--units-exponent=0",
-                    #                 "--lower-limit=0",
-                    #                 "--slope-mode",
-                    #                 "--border=1",
-                    #                 "DEF:cpupct=$rrdfile:cpupct:AVERAGE",
-                    #                 "DEF:memusedpct=$rrdfile:memusedpct:AVERAGE",
-                    #                 "AREA:60",
-                    #                 "AREA:20#FFFF9977::STACK",
-                    #                 "AREA:20#FFCC9977::STACK",
-                    #                 "AREA:cpupct#00FF0088:CPU",
-                    #                 "LINE:cpupct#080",
-                    #                 "GPRINT:cpupct:AVERAGE:Avg\\:%6.2lf",
-                    #                 "GPRINT:cpupct:MAX:Max\\:%6.2lf\\n",
-                    #                 "LINE1:memusedpct#0000ffDD:Mem",
-                    #                 "GPRINT:memusedpct:AVERAGE:Avg\\:%6.2lf",
-                    #                 "GPRINT:memusedpct:MAX:Max\\:%6.2lf",
-                    #                 "COMMENT:                               $lastupdate\\n");
-
                     ### Last 3 hrs
                     plot_rrd($host, '3h',
                              "$docroot/hosts/$host/sys/cpumem_dash.png", \@lpayload, $log);
@@ -793,27 +767,6 @@ sub dispatch_rrd {
                                     "GPRINT:ntotbyt:MAX:Max\\:%8.2lf",
                                     "GPRINT:ntotbyt:LAST:Last\\:%8.2lf",
                                     "COMMENT:           $lastupdate\\n");
-
-                    #push @dpayload, ("--font=TITLE:9:Arial",
-                    #                "--font=LEGEND:7:.",
-                    #                "--title=$host",
-                    #                "--color=BACK#e0e0e0",
-                    #                "--height=100",
-                    #                "--width=420",
-                    #                "--vertical-label=read+write KBytes",
-                    #                "--units-exponent=0",
-                    #                "--slope-mode",
-                    #                "--border=1",
-                    #                "DEF:dtotbyt=$rrdfile:totByt:AVERAGE",
-                    #                "DEF:ntotbyt=$rrdfile:ntByt:AVERAGE",
-                    #                "AREA:dtotbyt#81a7df88:Disk",
-                    #                "LINE:dtotbyt#06f",
-                    #                "GPRINT:dtotbyt:AVERAGE:Avg\\:%8.2lf",
-                    #                "GPRINT:dtotbyt:MAX:Max\\:%8.2lf\\n",
-                    #                "LINE1:ntotbyt#ff4605DD:Net ",
-                    #                "GPRINT:ntotbyt:AVERAGE:Avg\\:%8.2lf",
-                    #                "GPRINT:ntotbyt:MAX:Max\\:%8.2lf",
-                    #                "COMMENT:                      $lastupdate\\n");
 
                     ### Last 3 hrs
                     plot_rrd($host, '3h',
