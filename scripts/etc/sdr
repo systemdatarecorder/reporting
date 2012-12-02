@@ -1,0 +1,211 @@
+#!/bin/sh
+
+# chkconfig:   2345 20 88
+# description: SDR Master script. Starts and stops reporting services
+
+# COPYRIGHT: Copyright (c) 2012 System Data Recorder
+#
+#  This program is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU General Public License
+#  as published by the Free Software Foundation; either version 2
+#  of the License, or (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software Foundation,
+#  Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#
+#  (http://www.gnu.org/copyleft/gpl.html)
+
+RETVAL=0
+OS_NAME=`uname -s`
+
+SDRREP_ROOT="/opt/sdr/report"
+BASEDIR="${SDRREP_ROOT}/db/"
+HTTP_CMD="${SDRREP_ROOT}/ws/sbin/nginx"
+HTTP_CONF="${SDRREP_ROOT}/ws/conf/nginx.conf"
+HTTP_PID="${SDRREP_ROOT}/ws/logs/nginx.pid"
+HTTP_FCGI="${SDRREP_ROOT}/ws/fastcgi_temp"
+NFCGI=1
+
+
+MODULES="http http-fcgi rrdcached"
+
+# basedir test
+test -d ${BASEDIR} || exit 0
+
+
+start() {
+    echo "Starting SDR services"
+
+    for rep in $MODULES
+    do
+
+        RETVAL=0
+
+        if [ "X${OS_NAME}" = "XSunOS" ]; then
+            echo " ${rep} service: \c"
+        else
+            echo -n " ${rep} service: "
+        fi  
+
+        case "$rep" in
+
+           # http server
+           http)
+            if [ -f ${HTTP_PID} ]; then
+                kill -0 `cat ${HTTP_PID}` >/dev/null 2>&1
+                if [ $? -eq  1 ]; then
+                    rm ${HTTP_PID}
+                    $HTTP_CMD -c $HTTP_CONF &
+                    RETVAL=$?
+                else
+                    RETVAL=1
+                fi
+            else
+                $HTTP_CMD -c $HTTP_CONF 2>/dev/null &
+                RETVAL=$?
+            fi
+
+            [ $RETVAL -eq 0 ] && echo "ok" || echo "failed"
+           ;;
+
+           # http-fcgi server
+           http\-fcgi)
+            if [ -f ${HTTP_FCGI}/nginx-fcgi.pid ]; then
+                kill -0 `cat ${HTTP_FCGI}/nginx-fcgi.pid` >/dev/null 2>&1
+                if [ $? -eq  1 ]; then
+                    rm ${HTTP_FCGI}/nginx-fcgi.pid
+                    ${SDRREP_ROOT}/ws/sbin/nginx-fcgi.boot ${HTTP_FCGI}/nginx-fcgi.sock $NFCGI
+                    RETVAL=$?
+                else
+                    RETVAL=1
+                fi
+            else
+                ${SDRREP_ROOT}/ws/sbin/nginx-fcgi.boot ${HTTP_FCGI}/nginx-fcgi.sock $NFCGI
+                RETVAL=$?
+            fi
+
+            [ $RETVAL -eq 0 ] && echo "ok" || echo "failed"
+           ;;
+
+           # rrdcached daemon
+           rrdcached)
+            cd ${BASEDIR}
+
+            if [ -f ${SDRREP_ROOT}/var/run/rrdcached.pid ]; then
+                kill -0 `cat ${SDRREP_ROOT}/var/run/rrdcached.pid` >/dev/null 2>&1
+                if [ $? -ne 0 ]; then
+                    ${SDRREP_ROOT}/bin/rrdcached -s sdr -w20 \
+                     -l unix:${SDRREP_ROOT}/var/cache/rrdcached/rrdcached.sock \
+                     -j ${SDRREP_ROOT}/var/cache/rrdcached/journal -F \
+                     -b $BASEDIR
+                    RETVAL=$?
+                else
+                    RETVAL=1
+                fi
+                [ $RETVAL -eq 0 ] && echo "ok" || echo "failed"
+            else
+                # no pid files
+                ${SDRREP_ROOT}/bin/rrdcached -s sdr -w20 \
+                 -l unix:${SDRREP_ROOT}/var/cache/rrdcached/rrdcached.sock \
+                 -j ${SDRREP_ROOT}/var/cache/rrdcached/journal -F \
+                 -b $BASEDIR
+
+                RETVAL=$?
+                [ $RETVAL -eq 0 ] && echo "ok" || echo "failed"
+            fi 
+           ;;
+
+        esac
+        sleep 1
+    done
+
+    return $RETVAL
+}
+
+
+
+
+stop() {
+    echo "Stopping SDR services"
+
+    for rep in $MODULES
+    do
+        RETVAL=0
+
+        if [ "X${OS_NAME}" = "XSunOS" ]; then
+            echo " ${rep} service: \c"
+        else
+            echo -n " ${rep} service: "
+        fi
+
+        case "$rep" in
+
+           # http server
+           http)
+            if [ -f ${HTTP_PID} ]; then
+                kill `cat ${HTTP_PID}` >/dev/null 2>&1
+                RETVAL=$?
+                [ $RETVAL -eq 0 ] && echo "ok" || echo "failed"
+            else
+                RETVAL=1
+                [ $RETVAL -eq 0 ] && echo "ok" || echo "failed"
+            fi
+           ;;
+
+           # http-fcgi server
+           http\-fcgi)
+            if [ -f ${HTTP_FCGI}/nginx-fcgi.pid ]; then
+                kill `cat ${HTTP_FCGI}/nginx-fcgi.pid` >/dev/null 2>&1
+                RETVAL=$?
+                [ $RETVAL -eq 0 ] && echo "ok" || echo "failed"
+            else
+                RETVAL=1
+                [ $RETVAL -eq 0 ] && echo "ok" || echo "failed"
+            fi
+           ;;
+
+
+           # rrdcached daemon
+           rrdcached)
+
+            if [ -f ${SDRREP_ROOT}/var/run/rrdcached.pid ]; then
+                kill `cat ${SDRREP_ROOT}/var/run/rrdcached.pid` >/dev/null 2>&1
+                RETVAL=$?
+                [ $RETVAL -eq 0 ] && echo "ok" || echo "failed"
+            else
+                RETVAL=1
+                [ $RETVAL -eq 0 ] && echo "ok" || echo "failed"
+            fi
+
+           ;;
+        esac
+    done
+
+    return $RETVAL
+}
+
+
+case "$1" in
+   start)
+      start
+      ;;
+   stop)
+      stop
+      ;;
+   restart)
+      stop
+      start
+      ;;
+   *)
+      echo "Usage: $0 {start|stop|restart}"
+      exit 1
+esac
+exit $RETVAL
+
+

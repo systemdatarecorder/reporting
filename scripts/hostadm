@@ -1,0 +1,1199 @@
+#!/opt/sdr/report/perl/bin/perl
+
+# COPYRIGHT: Copyright (c) 2012 System Data Recorder
+#
+#  This program is free software; you can redistribute it and/or
+#  modify it under the terms of the GNU General Public License
+#  as published by the Free Software Foundation; either version 2
+#  of the License, or (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software Foundation,
+#  Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+#
+#  (http://www.gnu.org/copyleft/gpl.html)
+
+# SDR VERSION: 0.74.2.2
+
+use warnings;
+use strict;
+use 5.010;
+use RRDs;
+use Getopt::Std;
+use IO::Handle;
+use XML::LibXML;
+use XML::LibXML::XPathContext;
+use File::Basename;
+use Date::Calc qw(Today_and_Now leap_year Date_to_Time This_Year);
+use Scalar::Util qw(looks_like_number);
+
+#
+# Command line arguments
+#
+usage() if defined $ARGV[0] and $ARGV[0] eq "--help";
+getopts('scdnejpzwt:I:ChvV') or usage();
+revision() if defined $main::opt_V;
+usage() if defined $main::opt_h;
+
+# verbose flag
+my $verbose_flag = defined $main::opt_v ? $main::opt_v : 0;
+
+my $sys_flag  = defined $main::opt_s ? $main::opt_s : 0;
+my $cpu_flag  = defined $main::opt_c ? $main::opt_c : 0;
+my $disk_flag = defined $main::opt_d ? $main::opt_d : 0;
+my $nic_flag  = defined $main::opt_n ? $main::opt_n : 0;
+my $net_flag  = defined $main::opt_e ? $main::opt_e : 0;
+my $jvm_flag  = defined $main::opt_j ? $main::opt_j : 0;
+my $prc_flag  = defined $main::opt_p ? $main::opt_p : 0;
+my $zon_flag  = defined $main::opt_z ? $main::opt_z : 0;
+my $web_flag  = defined $main::opt_w ? $main::opt_w : 0;
+
+#
+# globals variables
+#
+$main::opt_s = 0;      
+$main::opt_c = 0;
+$main::opt_d = 0;
+$main::opt_n = 0;
+$main::opt_e = 0;
+$main::opt_j = 0;
+$main::opt_p = 0;
+$main::opt_z = 0;
+$main::opt_w = 0;      
+$main::opt_h = 0;
+$main::opt_V = 0;
+$main::opt_h = 0;
+$main::opt_V = 0;
+# daemon name
+my $hname                = 'hostadm';
+my $xmlcnf               = 'sdr.conf';  # sdr configuration
+my @hobj;                               # host rec objects
+my ($db, $host);
+my ($dbpath, $docroot);
+my ($seconds, $dbname, $time, $year);
+my ($step, $hb, $min, $max, $slots);
+my $rrdcached_address    = 'unix:/opt/sdr/report/var/cache/rrdcached/rrdcached.sock';
+my ($tinput, $tflag)     = 0;
+my ($copt, $uopt, $popt) = 0;
+my $logpath              = "/opt/sdr/report/var/log/"; # log file path
+my $logfile              = $logpath . $hname . ".log";
+local $| = 1; # autoflush
+
+
+# ######### #
+# MAIN BODY #
+# ######### #
+
+# record here the OS name
+my $osname = $^O;
+
+# start time
+# my $year = This_Year();
+# my $ysecs = Date_to_Time($year,1,1, 0,0,0);
+
+
+# validate and open configuration xml
+my $conf = open_conf($xmlcnf);
+
+# get dbpath, docroot
+my @rep_childs = $conf -> findnodes("/sdr/reporting/*");
+my $rc = 0;
+
+foreach my $node (@rep_childs) {
+
+    next if $node -> nodeName() !~ /db|docroot/;
+
+    given($node -> nodeName()) {
+
+        # db
+        when(/db/) {
+            $dbpath = $node -> getAttribute('path');  }
+
+        # docroot
+        when(/docroot/) {
+            $docroot = $node -> getAttribute('path');  }
+
+    }
+
+    $rc++;
+}
+
+# check for Instant mode
+if (defined($main::opt_I)) {
+    # check for separator
+    ($db, $host) = split (/:/,$main::opt_I);
+    instant($db, $host);
+}
+
+
+
+# Command line arguments
+my $command = shift;
+
+# check on internal commands
+given($command) {
+    #  create command
+    when('create') { $copt=1; }
+
+    #  update command
+    when('update') { $uopt=1; }
+
+    #  plot command
+    when('plot') { $popt=1; }
+
+    default { usage(); }
+}
+
+
+
+# Subroutines
+
+# instant mode
+sub instant {
+    my ($d, $h) = @_;
+
+    open my $lh, ">>", "$logfile"
+        or die "error: cannot open log file: $!";
+    $lh ->autoflush(); 
+    instant_rrd($d,$h,$lh);
+    close $lh;
+
+    return;
+}
+
+
+# instant process rrd updates
+sub instant_rrd {
+
+    my ($dbtype, $host, $lhandle) = @_;
+
+    while (defined(my $sdrd_rec = <>)) {
+
+        chomp($sdrd_rec);
+
+        given("$dbtype") {
+            # main debug
+            # addlog("dbtype=$dbtype, dbpath=$dbpath, docroot=$docroot", $lhandle);
+
+            # sysrec
+            when(/sys/) {
+                my $rrddb = $dbpath . $dbtype . "/" . $dbtype . "." . $host . ".rrd";
+                my $rectime = ((split /\:/, $sdrd_rec)[0] - 1);
+
+                # la
+                # my $la = 
+                my @sysdata = split (/:/,$sdrd_rec);
+                update_dchost_la(  $docroot, 
+                                   $host, 
+                                   "$sysdata[$#sysdata-2] $sysdata[$#sysdata-1] $sysdata[$#sysdata]\n", 
+                                   $lhandle);
+                #addlog("la: $host $sysdata[$#sysdata-2] $sysdata[$#sysdata-1] $sysdata[$#sysdata]", $lhandle);
+ 
+
+
+                # check rrd
+                my $check = check_rrd ($dbtype, $host, $rrddb, $rectime, $lhandle);
+                if ($check) {
+                    update_rrd($rrddb, $sdrd_rec, $lhandle);
+                    dispatch_rrd('sys', $rrddb, $host, $lhandle);
+                }
+            }
+
+            # cpurec
+            when(/cpu/) {
+                # extract cpu-id
+                my @cdata = split (/:/,$sdrd_rec);
+                my @pcdata = @cdata[0,2,3..$#cdata];
+                my $rectime = $pcdata[0] - 1;
+                my $csdrd  = join (":", @pcdata);
+ 
+                # pad for Solaris cdata[1] cpuid:0,1,2. ... add cpu
+                if ($cdata[1] !~ /^cpu/) {
+                    $cdata[1] = "cpu" . $cdata[1];
+                }
+
+                my $rrddb = $dbpath . $dbtype ."/" . $cdata[1] . "." . $host . ".rrd";
+        
+                # check rrd                
+                my $check = check_rrd ($dbtype, $host, $rrddb, $rectime, $lhandle);
+                if ($check) {
+                    update_rrd($rrddb, $csdrd, $lhandle);
+                    # plot_rrd('cpu', $host, $lhandle);
+                }
+            }
+
+            # diskrec
+            when(/disk/) {
+                # extract disk-id
+            }
+
+            # nicrec
+            when(/nic/) {
+                # extract nic-id
+                my @ndata = split (/:/,$sdrd_rec);
+                my @pndata = @ndata[0,2,3..$#ndata];
+                my $rectime = $pndata[0] - 1;
+                my $nsdrd  = join (":", @pndata);
+                my $rrddb = $dbpath . $dbtype ."/" . $ndata[1] . "." . $host . ".rrd";
+
+                # check rrd
+                my $check = check_rrd ($dbtype, $host, $rrddb, $rectime, $lhandle);
+                if ($check) {
+                    update_rrd($rrddb, $nsdrd, $lhandle);
+                }
+            }
+
+
+            # jvmrec
+            when(/jvm/) {
+                # extract cpu-id
+                my @jdata = split (/:/,$sdrd_rec);
+                my @pjdata = @jdata[0,2,3..$#jdata];
+                my $rectime = $pjdata[0] - 1;
+                my $jsdrd  = join (":", @pjdata);
+
+                # check if jvmname has a pid identifier
+                $jdata[1] =~ s/\..*$// if $jdata[1] =~ /\./;
+ 
+                my $rrddb = $dbpath . $dbtype ."/" . $jdata[1] . "." . $host . ".rrd";
+
+                # check rrd
+                my $check = check_rrd ($dbtype, $host, $rrddb, $rectime, $lhandle);
+                if ($check) {
+                    update_rrd($rrddb, $jsdrd, $lhandle);
+                }
+
+            }
+
+
+            # netrec 
+            when(/net/) {
+                my @netdata = split (/:/,$sdrd_rec);
+
+                ### check for 2 field if it is a number or string
+                if(looks_like_number($netdata[1])) {
+
+                    ### linux
+                    my $rrddb = $dbpath . $dbtype . "/" . $dbtype . "." . $host . ".rrd";
+                    # my $rectime = ((split /\:/, $sdrd_rec)[0] - 1);
+
+                    # check rrd
+                    my $check = check_rrd ($dbtype, $host, $rrddb, $netdata[0], $lhandle);
+                    if ($check) {
+                        update_rrd($rrddb, $sdrd_rec, $lhandle);
+                    }
+
+                } else {
+
+                    ### solaris
+                    my @pnetdata = @netdata[0,2,,3..$#netdata];
+                    my $rectime = $pnetdata[0] - 1;
+                    my $netsdrd  = join (":", @pnetdata);
+                    my $rrddb = $dbpath . $db . "/" . $netdata[1] . "." . $host . ".rrd";
+                   
+                    my $check = check_rrd ($dbtype, $host, $rrddb, $rectime, $lhandle);
+                    if ($check) {
+                        update_rrd($rrddb, $netsdrd, $lhandle);
+                    }
+
+                }
+            }
+
+            # hdwrec
+            when(/hdw/) {
+                update_inventory( $docroot, $host, $sdrd_rec, $lhandle);
+            }
+
+        }
+    }
+
+    return;
+}
+
+
+sub write_inventory {
+
+    my ($dc, $h, $payload, $inv, $log) = @_;
+
+    my $invfile = $dc . "/hosts/" . $h . "/inventory/" . $inv . ".html";
+    if (! -e "$invfile") {
+        addlog("error: write_inventory - cannot find $invfile: $!...", $log);
+        return 0;
+    } else { 
+        open my $inventory, ">", "$invfile"
+            or die "error: write_inventory - cannot open $inv inventory file: $!";
+        print $inventory "$payload";
+        close $inventory;
+        return 1;
+    }
+
+    # otherwise undef
+    return;
+}
+
+
+# hdw inventory host
+sub update_inventory {
+
+    my ($dc, $h, $payload, $log) = @_;
+
+    my @hdwdata = split (/:/,$payload);
+    my @hdata = @hdwdata[1,2,3..$#hdwdata];
+
+    # Debug
+    # addlog("hdata=@hdata", $lhandle);
+    my $hindex = $#hdata;
+
+    # check sdrd hdwrec raw data
+    # hdw.html
+    # uptime.html
+    # ru.html
+    # os.html
+    # pcpu.html
+    # vcpu.html
+    # pmem.html
+    # disks.html
+    # jvms.html
+    # nics.html
+    # name.html
+
+    if ($hindex > 10 ) {
+
+        # conforms with sdrd 0737
+        # linux
+        # addlog("linux os hdw items=$hindex", $log);
+
+        # name
+        write_inventory ($dc, $h, $hdata[0], "name", $log);
+
+        # hdw aka type
+        write_inventory ($dc, $h, $hdata[1], "hdw", $log);
+    
+        # uptime
+        write_inventory ($dc, $h, $hdata[$hindex], "uptime", $log);
+                    
+        # os
+        write_inventory ($dc, $h, $hdata[2], "os", $log);
+
+        # pcpu
+        write_inventory ($dc, $h, $hdata[6], "pcpu", $log);
+ 
+        # vcpu
+        write_inventory ($dc, $h, $hdata[7], "vcpu", $log);
+       
+        # pmem
+        write_inventory ($dc, $h, $hdata[8], "pmem", $log);
+
+        # swap
+        write_inventory ($dc, $h, $hdata[9], "swap", $log);
+
+        # disks
+        write_inventory ($dc, $h, $hdata[10], "disks", $log);
+
+        # nics
+        write_inventory ($dc, $h, $hdata[11], "nics", $log);
+
+        # jvms
+        write_inventory ($dc, $h, $hdata[12], "jvms", $log);
+        
+    } else {
+
+        # conforms with sdrd 0737
+        # solaris
+        # addlog("solaris os hdw items=$hindex", $log);
+
+        # name
+        write_inventory ($dc, $h, $hdata[0], "name", $log);
+
+        # hdw aka type
+        write_inventory ($dc, $h, $hdata[1], "hdw", $log);
+
+        # uptime
+        write_inventory ($dc, $h, $hdata[$hindex], "uptime", $log);
+
+        # os
+        write_inventory ($dc, $h, $hdata[2], "os", $log);
+
+        # pcpu
+        write_inventory ($dc, $h, $hdata[3], "pcpu", $log);
+ 
+        # vcpu
+        write_inventory ($dc, $h, $hdata[4], "vcpu", $log);
+       
+        # pmem
+        write_inventory ($dc, $h, $hdata[5], "pmem", $log);
+
+        # swap
+        write_inventory ($dc, $h, $hdata[6], "swap", $log);
+
+        # disks
+        write_inventory ($dc, $h, $hdata[7], "disks", $log);
+
+        # nics
+        write_inventory ($dc, $h, $hdata[8], "nics", $log);
+
+        # jvms
+        write_inventory ($dc, $h, $hdata[9], "jvms", $log);
+    }
+
+
+    # otherwise undef
+    return;
+}
+
+# check rrd db file existance
+sub check_rrd {
+    my ($db, $h, $rrdfile, $t, $log) = @_;
+
+    my $br = basename($rrdfile);
+
+    if (! -e "$rrdfile") {
+        addlog("error: check_rrd - cannot find $br db: $!, try instant create...", $log);
+        # create if needed the rrd db
+        my $c = instant_create($db, $h, $rrdfile, $t, $log);
+        if ($c) {
+            return 1;
+        } else { return 0; }
+
+    # we have valid rrd file on disk
+    } else { return 1; }
+
+    # otherwise undef
+    return;
+}
+
+
+# perform rrd create
+sub instant_create {
+    my ($db, $host, $rrdfile, $ct, $log) = @_;
+    my ($rrderror, $code);
+    my $br = basename($rrdfile);
+
+    # check for db structure
+    my $dest = $dbpath . $db;
+    if (! -d $dest) {
+        addlog("fatal: instant_create - check SDR Reporting installation: $!", $log);
+        exit 1;
+    }
+    
+    # validate and open configuration xml
+    my $conf = open_conf($xmlcnf);
+
+    # get the tree values as an array of hashes
+    my @cat;
+    @cat = get_values($conf, "/sdr/recording/*", "host");
+
+    for my $i ( 0 .. $#cat ) {
+        for my $key (keys %{ $cat[$i] }) {
+            my ($name, $os) = split /:/, $key;
+            addlog("info: instant_create - host=$host, name=$name, $rrdfile", $log);
+
+            if ($name eq $host) {
+
+                # recording objects
+                my @dbs = split( /,/, $cat[$i]{$key});
+                
+                # my $ndbs = $#dbs+1;
+                # addlog("info: instant_create - $name -> $cat[$i]{$key} $ndbs", $log);
+
+                # load array host, recording objects
+                # push @hobj, $cat[$i]{$key};
+                 
+                for my $j ( 0 .. $#dbs ) {
+                    if ($dbs[$j] =~ /$db/) {
+                        my @dsrra = 
+                         get_object($conf, "/sdr/reporting/object[\@name=\"$dbs[$j]\"]");
+
+                        # after this make the db
+                        my @rrd = @dsrra[1..$#dsrra];
+                
+                        RRDs::create("$rrdfile", "--start", $ct, 
+                                     "--step", $dsrra[0], @rrd);
+                        $rrderror = RRDs::error;
+                        if($rrderror) {
+                            addlog("error: instant_create - cannot create db $br: $rrderror", $log);
+                            return 0;
+                        }
+
+                        addlog("info: instant_create - $br has been created", $log);
+                        return 1;
+                    }
+                # for $#dbs
+                }
+
+            # if $name
+            }
+            else {
+                addlog("error: instant_create - $host not found, check sdr.conf !", $log);
+            }
+        }
+    }
+
+    return;
+}
+
+
+# update docroot host LA
+sub update_dchost_la {
+    my ($dc, $h, $payload, $log) = @_;
+
+    #my $br = basename($rrdfile);
+
+    my $lafile = $dc . "/hosts/" . $host . "/inventory/la.html";
+
+    if (! -e "$lafile") {
+        addlog("error: update_dchost_la - cannot find $lafile: $!...", $log);
+        return 0;
+    } else {
+        open my $inv, ">", "$lafile"
+         or die "error: cannot open LA inventory file: $!";
+
+        print $inv "$payload";
+ 
+        close $inv;
+
+        return 1;
+    } 
+
+    # otherwise undef
+    return;
+}
+
+
+### update rrd file 
+sub update_rrd {
+    my ($rrd, $record, $log) = @_;
+    my $brrd = basename($rrd);
+    my $rrderr;
+
+    RRDs::update("$rrd", "--daemon", "$rrdcached_address", "$record");
+    $rrderr = RRDs::error;
+    if ($rrderr) {
+        addlog("error: cannot update $brrd: $rrderr\n", $log);
+        addlog("info: trying direct update...", $log);
+        RRDs::update("$rrd", "$record");
+        $rrderr = RRDs::error;
+        if ($rrderr) {
+            addlog("error: cannot update direct $brrd: $rrderr\n", $log);
+            close $log;
+            exit 1;
+        }
+    }
+
+    return;
+}
+
+
+### graph rrd file
+sub plot_rrd {
+    my ($host, $interval, $output, $p, $log) = @_;
+    my $rrderr;
+    my @payload;
+
+    ### take the payload reference and load array
+    foreach(@$p) {
+        push @payload, $_;
+    }
+
+    #addlog("info: plot_rrd - @payload", $log);
+    RRDs::graph ("--daemon", 
+                 "$rrdcached_address", 
+                 "--start=end-$interval",
+                 "$output",
+                  @payload);
+
+    $rrderr = RRDs::error;
+    if ($rrderr) {
+        addlog("error: graph_rrd - cannot plot $host: $rrderr", $log);
+        addlog("info: graph_rrd - trying direct plot...", $log);
+
+        RRDs::graph ("--start=end-$interval",
+                     "$output",
+                     @payload,);
+
+        $rrderr = RRDs::error;
+        if ($rrderr) {
+            addlog("fatal: graph_rrd - cannot plot $host: $rrderr", $log);
+            close $log;
+            exit 1;
+        }
+    }
+
+    return;
+}
+
+
+### dispatch and prepare for plotting
+sub dispatch_rrd {
+
+    my ($oid, $rrdfile, $host, $log) = @_;
+    my $rrderr;
+
+    ### check host
+    # inefficient - will be replaced by Bug 210 - hostadm does not scale 
+    ### validate and open configuration xml
+    my $conf = open_conf($xmlcnf);
+
+    ### get the tree values as an array of hashes
+    my @cat;
+    @cat = get_values($conf, "/sdr/recording/*", "host");
+
+    for my $i ( 0 .. $#cat ) {
+        for my $key (keys %{ $cat[$i] }) {
+            my ($name, $os) = split /:/, $key;
+            # addlog("info: plot_rrd - host=$host, name=$name, $os", $log);
+
+            if ($name eq $host) {
+
+                ### recording objects
+                # my @dbs = split( /,/, $cat[$i]{$key});
+                #my $ndbs = $#dbs+1;
+                #addlog("info: plot_rrd - $name -> $cat[$i]{$key} $ndbs", $log);
+
+                ### load array host, recording objects
+                push @hobj, $cat[$i]{$key};
+            }
+            #else {
+            #    addlog ("error: plot_rrd - $host not found, check sdr.conf !", $log);
+            #    return;
+            #}
+        }
+    }
+
+    # addlog("info: plot_rrd - host: $host rec objects: @hobj", $log);
+   
+    # plot time
+    my ($year, $month, $day, $hour,$min,$sec) = Today_and_Now(); 
+    my $lastupdate = sprintf("%d\-%02d\-%02dT%02d\\:%02d\\:%02d",$year,$month,$day,$hour,$min,$sec);
+
+    given("$oid") {
+
+        when (/sys/) {
+       
+            given("@hobj") {
+                ### sysrec
+                when(/syslx/) {
+                    ### Linux extended 0737+ sdrd format
+                    addlog("info: dispatch_rrd - host: $host, syslx object found", $log);
+
+                    my @lpayload;
+
+                    ### CPU, Mem syslx sdrd
+                    push @lpayload, ("--font=TITLE:9:Arial",
+                                     "--font=LEGEND:7:.",
+                                     "--title=$host",
+                                     "--color=BACK#e0e0e0",
+                                     "--upper-limit=100",
+                                     "--height=100",
+                                     "--width=420",
+                                     "--vertical-label=% Utilization",
+                                     "--units-exponent=0",
+                                     "--lower-limit=0",
+                                     "--slope-mode",
+                                     "--border=1",
+                                     "DEF:cpupct=$rrdfile:cpupct:AVERAGE",
+                                     "DEF:memusedpct=$rrdfile:memusedpct:AVERAGE",
+                                     "AREA:60",
+                                     "AREA:20#FFFF9977::STACK",
+                                     "AREA:20#FFCC9977::STACK",
+                                     "AREA:cpupct#00FF0088:CPU",
+                                     "LINE:cpupct#080",
+                                     "GPRINT:cpupct:AVERAGE:Avg\\:%6.2lf",
+                                     "GPRINT:cpupct:MAX:Max\\:%6.2lf",
+                                     "GPRINT:cpupct:LAST:Last\\:%6.2lf\\n",
+                                     "LINE1:memusedpct#0000ffDD:Mem",
+                                     "GPRINT:memusedpct:AVERAGE:Avg\\:%6.2lf",
+                                     "GPRINT:memusedpct:MAX:Max\\:%6.2lf",
+                                     "GPRINT:memusedpct:LAST:Last\\:%6.2lf",
+                                     "COMMENT:                  $lastupdate\\n");
+                    
+                    #push @dpayload, ("--font=TITLE:9:Arial",
+                    #                 "--font=LEGEND:7:.",
+                    #                 "--title=$host",
+                    #                 "--color=BACK#e0e0e0",
+                    #                 "--upper-limit=100",
+                    #                 "--height=100",
+                    #                 "--width=420",
+                    #                 "--vertical-label=% Utilization",
+                    #                 "--units-exponent=0",
+                    #                 "--lower-limit=0",
+                    #                 "--slope-mode",
+                    #                 "--border=1",
+                    #                 "DEF:cpupct=$rrdfile:cpupct:AVERAGE",
+                    #                 "DEF:memusedpct=$rrdfile:memusedpct:AVERAGE",
+                    #                 "AREA:60",
+                    #                 "AREA:20#FFFF9977::STACK",
+                    #                 "AREA:20#FFCC9977::STACK",
+                    #                 "AREA:cpupct#00FF0088:CPU",
+                    #                 "LINE:cpupct#080",
+                    #                 "GPRINT:cpupct:AVERAGE:Avg\\:%6.2lf",
+                    #                 "GPRINT:cpupct:MAX:Max\\:%6.2lf\\n",
+                    #                 "LINE1:memusedpct#0000ffDD:Mem",
+                    #                 "GPRINT:memusedpct:AVERAGE:Avg\\:%6.2lf",
+                    #                 "GPRINT:memusedpct:MAX:Max\\:%6.2lf",
+                    #                 "COMMENT:                               $lastupdate\\n");
+
+                    ### Last 3 hrs
+                    plot_rrd($host, '3h',
+                             "$docroot/hosts/$host/sys/cpumem_dash.png", \@lpayload, $log);
+
+                    ### Last 12 hrs
+                    plot_rrd($host, '12h',
+                             "$docroot/hosts/$host/sys/cpumem_last12h.png", \@lpayload, $log);
+
+                    ### Last 24 hrs
+                    plot_rrd($host, '24h',
+                             "$docroot/hosts/$host/sys/cpumem_last24h.png", \@lpayload, $log);
+
+                    ### Last 3 days
+                    #   "--x-grid=HOUR:2:HOUR:6:HOUR:12:0:%R"
+                    plot_rrd($host, '3d',
+                             "$docroot/hosts/$host/sys/cpumem_last3d.png", \@lpayload, $log);
+ 
+                    ### Last 7 days
+                    #   "--x-grid=HOUR:2:HOUR:6:HOUR:12:0:%R"
+                    plot_rrd($host, '7d',
+                             "$docroot/hosts/$host/sys/cpumem_last7d.png", \@lpayload, $log);
+
+                    ### Last 4 weeks
+                    plot_rrd($host, '4w',
+                             "$docroot/hosts/$host/sys/cpumem_last4w.png", \@lpayload, $log);
+
+                    ### Last 12 weeks
+                    plot_rrd($host, '12w',
+                             "$docroot/hosts/$host/sys/cpumem_last12w.png", \@lpayload, $log);
+
+
+                    ### Disk, Net Throughput sdrd 0737
+                    @lpayload=();
+                    push @lpayload, ("--font=TITLE:9:Arial",
+                                    "--font=LEGEND:7:.",
+                                    "--title=$host",
+                                    "--color=BACK#e0e0e0",
+                                    "--height=100",
+                                    "--width=420",
+                                    "--vertical-label=read+write KBytes",
+                                    "--units-exponent=0",
+                                    "--slope-mode",
+                                    "--border=1",
+                                    "DEF:dtotbyt=$rrdfile:totByt:AVERAGE",
+                                    "DEF:ntotbyt=$rrdfile:ntByt:AVERAGE",
+                                    "AREA:dtotbyt#81a7df88:Disk",
+                                    "LINE:dtotbyt#06f",
+                                    "GPRINT:dtotbyt:AVERAGE:Avg\\:%8.2lf",
+                                    "GPRINT:dtotbyt:MAX:Max\\:%8.2lf",
+                                    "GPRINT:dtotbyt:LAST:Last\\:%8.2lf\\n",
+                                    "LINE1:ntotbyt#ff4605DD:Net ",
+                                    "GPRINT:ntotbyt:AVERAGE:Avg\\:%8.2lf",
+                                    "GPRINT:ntotbyt:MAX:Max\\:%8.2lf",
+                                    "GPRINT:ntotbyt:LAST:Last\\:%8.2lf",
+                                    "COMMENT:           $lastupdate\\n");
+
+                    #push @dpayload, ("--font=TITLE:9:Arial",
+                    #                "--font=LEGEND:7:.",
+                    #                "--title=$host",
+                    #                "--color=BACK#e0e0e0",
+                    #                "--height=100",
+                    #                "--width=420",
+                    #                "--vertical-label=read+write KBytes",
+                    #                "--units-exponent=0",
+                    #                "--slope-mode",
+                    #                "--border=1",
+                    #                "DEF:dtotbyt=$rrdfile:totByt:AVERAGE",
+                    #                "DEF:ntotbyt=$rrdfile:ntByt:AVERAGE",
+                    #                "AREA:dtotbyt#81a7df88:Disk",
+                    #                "LINE:dtotbyt#06f",
+                    #                "GPRINT:dtotbyt:AVERAGE:Avg\\:%8.2lf",
+                    #                "GPRINT:dtotbyt:MAX:Max\\:%8.2lf\\n",
+                    #                "LINE1:ntotbyt#ff4605DD:Net ",
+                    #                "GPRINT:ntotbyt:AVERAGE:Avg\\:%8.2lf",
+                    #                "GPRINT:ntotbyt:MAX:Max\\:%8.2lf",
+                    #                "COMMENT:                      $lastupdate\\n");
+
+                    ### Last 3 hrs
+                    plot_rrd($host, '3h',
+                             "$docroot/hosts/$host/sys/disknet_dash.png", \@lpayload, $log);
+
+                    ### Last 12 hrs
+                    plot_rrd($host, '12h',
+                             "$docroot/hosts/$host/sys/disknet_last12h.png", \@lpayload, $log);
+
+                    ### Last 24 hrs
+                    plot_rrd($host, '24h',
+                             "$docroot/hosts/$host/sys/disknet_last24h.png", \@lpayload, $log);
+
+                    ### Last 3 days
+                    #   "--x-grid=HOUR:2:HOUR:6:HOUR:12:0:%R"
+                    plot_rrd($host, '3d',
+                             "$docroot/hosts/$host/sys/disknet_last3d.png", \@lpayload, $log);
+ 
+                    ### Last 7 days
+                    plot_rrd($host, '7d',
+                             "$docroot/hosts/$host/sys/disknet_last7d.png", \@lpayload, $log);
+
+                    ### Last 4 weeks
+                    plot_rrd($host, '4w',
+                             "$docroot/hosts/$host/sys/disknet_last4w.png", \@lpayload, $log);
+
+                    ### Last 12 weeks
+                    plot_rrd($host, '12w',
+                             "$docroot/hosts/$host/sys/disknet_last12w.png", \@lpayload, $log);
+
+                }
+
+                when(/sysl/) { addlog("info: dispatch_rrd - host: $host, sysl object found", $log); }
+
+                when(/syss/) { 
+
+                    addlog("info: dispatch_rrd - host: $host, syss object found", $log);
+
+                    my @lpayload;
+
+                    ### CPU, Mem syss sdrd
+                    push @lpayload, ("--font=TITLE:9:Arial",
+                                    "--font=LEGEND:7:.",
+                                    "--title=$host",
+                                    "--color=BACK#e0e0e0",
+                                    "--upper-limit=100",
+                                    "--height=100",
+                                    "--width=420",
+                                    "--vertical-label=% Utilization",
+                                    "--units-exponent=0",
+                                    "--lower-limit=0",
+                                    "--slope-mode",
+                                    "--border=1",
+                                    "DEF:cpupct=$rrdfile:cpupct:AVERAGE",
+                                    "DEF:memusedpct=$rrdfile:memusedpct:AVERAGE",
+                                    "AREA:60",
+                                    "AREA:20#FFFF9977::STACK",
+                                    "AREA:20#FFCC9977::STACK",
+                                    "AREA:cpupct#00FF0088:CPU",
+                                    "LINE:cpupct#080",
+                                    "GPRINT:cpupct:AVERAGE:Avg\\:%6.2lf",
+                                    "GPRINT:cpupct:MAX:Max\\:%6.2lf",
+                                    "GPRINT:cpupct:LAST:Last\\:%6.2lf\\n",
+                                    "LINE1:memusedpct#0000ffDD:Mem",
+                                    "GPRINT:memusedpct:AVERAGE:Avg\\:%6.2lf",
+                                    "GPRINT:memusedpct:MAX:Max\\:%6.2lf",
+                                    "GPRINT:memusedpct:LAST:Last\\:%6.2lf",
+                                    "COMMENT:                  $lastupdate\\n");
+                    
+                    ### Last 3 hrs
+                    plot_rrd($host, '3h',
+                             "$docroot/hosts/$host/sys/cpumem_dash.png", \@lpayload, $log);
+
+                    ### Last 12 hrs
+                    plot_rrd($host, '12h',
+                             "$docroot/hosts/$host/sys/cpumem_last12h.png", \@lpayload, $log);
+
+                    ### Last 24 hrs
+                    plot_rrd($host, '24h',
+                             "$docroot/hosts/$host/sys/cpumem_last24h.png", \@lpayload, $log);
+
+                    ### Last 3 days
+                    plot_rrd($host, '3d',
+                             "$docroot/hosts/$host/sys/cpumem_last3d.png", \@lpayload, $log);
+ 
+                    ### Last 7 days
+                    #   "--x-grid=HOUR:2:HOUR:6:HOUR:12:0:%R"
+                    plot_rrd($host, '7d',
+                             "$docroot/hosts/$host/sys/cpumem_last7d.png", \@lpayload, $log);
+
+                    ### Last 4 weeks
+                    plot_rrd($host, '4w',
+                             "$docroot/hosts/$host/sys/cpumem_last4w.png", \@lpayload, $log);
+
+                    ### Last 12 weeks
+                    plot_rrd($host, '12w',
+                             "$docroot/hosts/$host/sys/cpumem_last12w.png", \@lpayload, $log);
+
+
+                    ### Disk, Net Throughput sdrd 0737
+                    @lpayload=();
+                    push @lpayload, ("--font=TITLE:9:Arial",
+                                     "--font=LEGEND:7:.",
+                                     "--title=$host",
+                                     "--color=BACK#e0e0e0",
+                                     "--height=100",
+                                     "--width=420",
+                                     "--vertical-label=% Utilization",
+                                     "--units-exponent=0",
+                                     "--slope-mode",
+                                     "--border=1",
+                                     "DEF:diskpct=$rrdfile:diskpct:AVERAGE",
+                                     "DEF:netpct=$rrdfile:netpct:AVERAGE",
+                                     "AREA:diskpct#81a7df88:Disk",
+                                     "LINE:diskpct#06f",
+                                     "GPRINT:diskpct:AVERAGE:Avg\\:%6.2lf",
+                                     "GPRINT:diskpct:MAX:Max\\:%6.2lf",
+                                     "GPRINT:diskpct:LAST:Last\\:%6.2lf\\n",
+                                     "LINE1:netpct#ff4605DD:Net ",
+                                     "GPRINT:netpct:AVERAGE:Avg\\:%6.2lf",
+                                     "GPRINT:netpct:MAX:Max\\:%6.2lf",
+                                     "GPRINT:netpct:LAST:Last\\:%6.2lf",
+                                     "COMMENT:                 $lastupdate\\n");
+
+                    ### Last 3 hrs
+                    plot_rrd($host, '3h',
+                             "$docroot/hosts/$host/sys/disknet_dash.png", \@lpayload, $log);
+
+                    ### Last 12 hrs
+                    plot_rrd($host, '12h',
+                             "$docroot/hosts/$host/sys/disknet_last12h.png", \@lpayload, $log);
+
+                    ### Last 24 hrs
+                    plot_rrd($host, '24h',
+                             "$docroot/hosts/$host/sys/disknet_last24h.png", \@lpayload, $log);
+
+                    ### Last 3 days
+                    #   "--x-grid=HOUR:2:HOUR:6:HOUR:12:0:%R"
+                    plot_rrd($host, '3d',
+                             "$docroot/hosts/$host/sys/disknet_last3d.png", \@lpayload, $log);
+ 
+                    ### Last 7 days
+                    plot_rrd($host, '7d',
+                             "$docroot/hosts/$host/sys/disknet_last7d.png", \@lpayload, $log);
+
+                    ### Last 4 weeks
+                    plot_rrd($host, '4w',
+                             "$docroot/hosts/$host/sys/disknet_last4w.png", \@lpayload, $log);
+
+                    ### Last 12 weeks
+                    plot_rrd($host, '12w',
+                             "$docroot/hosts/$host/sys/disknet_last12w.png", \@lpayload, $log);
+                }   
+            }
+        }
+
+        when (/cpu/) {
+       
+            given("@hobj") {
+                ### cpurec
+                when(/cpul/) { addlog("info: dispatch_rrd - host: $host, cpul object found", $log); }
+                when(/cpus/) { addlog("info: dispatch_rrd - host: $host, cpus object found", $log); }
+            }
+        }
+
+    }
+ 
+    return;
+}
+
+
+
+sub open_conf {
+
+    my ($conf) = @_;
+    my $tree;
+
+    my $parser = XML::LibXML->new();
+    $parser -> keep_blanks(0);
+
+    # we will validate sdr.conf later releases
+    # $parser->validation(1);
+
+    # we will parse now the file
+    if ( defined $ENV{'SDRREP_ROOT'} ) {
+        if (-e "$ENV{'SDRREP_ROOT'}/etc/$conf") {
+            $tree = $parser->parse_file("$ENV{'SDRREP_ROOT'}/etc/$conf");
+        } else {
+            print "error: $! $ENV{'SDRREP_ROOT'}/etc/$conf \n";
+            usage();
+        }
+    } else {
+        if (-e "/opt/sdr/report/etc/$conf") {
+            $tree = $parser->parse_file("/opt/sdr/report/etc/$conf");
+        } else {
+            print "error: $! /opt/sdr/report/etc/$conf \n";
+            usage();
+        }
+    }
+
+    # return the tree configuration
+    return $tree;
+}
+
+
+# return an array of hashes
+sub get_values {
+    my ($conf, $expr, $pat) = @_;
+    my @result;
+
+    #XPath Walking
+    my @childs = $conf -> findnodes ($expr);
+
+    foreach my $node (@childs) {
+
+        #print "Node:" . $node->nodeName() . "\n";
+        # check for cell | dcroom modes
+        given($node->nodeName()) {
+
+            # Cell Mode
+            when('cell') {
+                my $cellfile = $node->getAttribute('input');
+                # print "parsedb.pl: cellfile=$cellfile \n";
+                my $tree = open_conf($cellfile);
+
+                # cell->host
+                my @cchilds = $tree -> findnodes ("/cell/*");
+                foreach my $cnode (@cchilds) {
+                    next if $cnode->nodeName() !~ /$pat/;
+                    #print "Filtered Node:" . $cnode->nodeName() . "\n";
+                    push @result, { $cnode->getAttribute('name')
+                                    . ":"
+                                    . $cnode->getAttribute('os') ,
+                                    $cnode->getAttribute('rec') };
+                }
+            }
+
+            # DataCenter Room Mode
+            when('dc') {
+                my $dcrfile = $node->getAttribute('input');
+                #print "parsedb.pl: dcfile=$dcrfile \n";
+                my $tree = open_conf($dcrfile);
+
+                # dcroom->rackN->host
+                my @dchilds = $tree -> findnodes ("/dc/rack/*");
+                foreach my $dnode (@dchilds) {
+                    next if $dnode->nodeName() !~ /$pat/;
+                    # print "Filtered Node:" . $dnode->nodeName() . "\n";
+                    push @result, { $dnode->getAttribute('name')
+                                    . ":"
+                                    . $dnode->getAttribute('os') ,
+                                    $dnode->getAttribute('rec') };
+
+                }
+            }
+        }
+
+        next if $node->nodeName() !~ /$pat/;
+        #print "Filtered Node:" . $node->nodeName() . "\n";
+
+        given($pat) {
+
+            when('docroot') {
+                return $node->getAttribute('path');
+            }
+
+            when('host') {
+             push @result, { $node->getAttribute('name')
+                             . ":"
+                             . $node->getAttribute('os') ,
+                             $node->getAttribute('rec') };
+            }
+
+            default { return ; }
+        }
+    }
+
+    return @result;
+}
+
+
+# return db details as an array 
+sub get_object {
+    my ($conf, $path) = @_;
+    my @result;
+
+    #XPath Walking
+    my @childs = $conf -> findnodes ($path);
+
+    foreach my $node (@childs) {
+
+        # make sure one step node element defined
+        # would be validated by dtd
+        my $cnt = 0;
+        foreach my $step ($node -> getElementsByTagName('step')) {
+            push @result, $step->getAttribute('value');
+            $cnt++;
+        }
+
+        if ($cnt > 1) {
+            die "error: get_object - found more than one element node step \n";
+        }
+
+        foreach my $ds ($node->getElementsByTagName('ds')) {
+            push @result, ("DS:" . $ds->getAttribute('name') .":" .
+                           $ds->getAttribute('type') . ":" .
+                           $ds->getAttribute('heartbeat') . ":" .
+                           $ds->getAttribute('min') . ":" .
+                           $ds->getAttribute('max'));
+        }
+
+        foreach my $ds ($node->getElementsByTagName('rra')) {
+            push @result,  ("RRA:" . $ds->getAttribute('type') . ":" .
+                            $ds->getAttribute('xff') . ":" .
+                            $ds->getAttribute('steps')  . ":" .
+                            $ds->getAttribute('rows'));
+        }
+    }
+
+    # array of step, ds, rra values
+    return @result;
+}
+
+
+# logs a message: error, info, warning to the log file
+sub addlog {
+
+    my ($logbuf, $loghandle) = @_;
+
+    my ( $sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst ) =
+        localtime(time);
+
+    chomp($logbuf);
+    my $dt = sprintf "%4d-%02d-%02d %02d:%02d:%02d", 
+              $year + 1900, $mon + 1, $mday, $hour, $min, $sec;
+
+    print $loghandle "$dt $logbuf\n";
+
+    return;
+}
+
+
+sub revision {
+    print STDERR <<END;
+hostadm: 0.74.2.1, 2012-12-30
+END
+    exit 0;
+}
+
+
+sub usage {
+    print STDERR <<END;
+USAGE: hostadm [-scndejpzwthV] [-t epochtime] [-C] command [host,...]
+               [-I db:hostname]
+OPTIONS:
+   -s        : sysrec database
+   -c        : cpurec database
+   -d        : diskrec database
+   -n        : nicrec database
+   -e        : netrec database
+   -j        : jvmrec database
+   -p        : procrec database
+   -z        : zonerec database
+   -w        : webrec database
+   -t        : epoch time
+   -I        : instant mode
+   -C        : check and clean database
+   -h        : help information
+   -V        : release version
+   command   : create | update| plot
+
+  e.g. hostadm                        print every 60secs stats all JVMs
+
+END
+    exit 0;
+}
+
+
+sub check_clean {
+    print "Check & Clean subroutine...\n";
+    return;
+}
+

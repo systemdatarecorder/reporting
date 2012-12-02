@@ -1,0 +1,209 @@
+#!/opt/sdr/report/perl/bin/perl
+#
+# splitmerge - Raw data manipulation 
+#
+
+use warnings;
+use strict;
+use Getopt::Std;
+use 5.010;
+
+#use diagnostics;
+
+#
+# Command line arguments
+#
+usage() if defined $ARGV[0] and $ARGV[0] eq "--help";
+
+getopts('cdjNpzwhHvV:') or usage();
+usage() if (defined $main::opt_h or 
+            defined $main::opt_H);
+revision() if defined $main::opt_V;
+
+my $cpu_flag = defined $main::opt_c ? $main::opt_c : 0;
+my $dsk_flag = defined $main::opt_d ? $main::opt_d : 0;
+my $jvm_flag = defined $main::opt_j ? $main::opt_j : 0;
+my $nic_flag = defined $main::opt_N ? $main::opt_N : 0;
+my $prc_flag = defined $main::opt_p ? $main::opt_p : 0;
+my $zon_flag = defined $main::opt_z ? $main::opt_z : 0;
+my $web_flag = defined $main::opt_w ? $main::opt_w : 0;
+my $verbose_flag = defined $main::opt_v ? $main::opt_v : 0;
+
+#
+# globals variables
+#
+$main::opt_c = 0;
+$main::opt_d = 0;
+$main::opt_j = 0;
+$main::opt_N = 0;
+$main::opt_p = 0;
+$main::opt_z = 0;
+$main::opt_w = 0;
+$main::opt_h = 0;
+$main::opt_H = 0;
+$main::opt_v = 0;
+$main::opt_V = 0;
+
+my @hosts;
+
+# Main SDR Reporting Configuration
+my $xmlcnf = 'db.conf';
+
+my ($split_flag, $merge_flag) = 0;
+my ($seconds, $dbname, $time, $year);
+my ($step, $hb, $min, $max, $slots);
+local $| = 1;
+
+
+
+# ######### #
+# MAIN BODY #
+# ######### #
+
+# record here the OS name
+my $osname = $^O;
+
+# Command line arguments
+my $command = shift;
+
+#
+# check on internal commands
+given($command) {
+    #  create command
+    when('split') { $split_flag=1; }
+
+    #  update command
+    when('merge') { $merge_flag=1; }
+
+    default { usage(); }
+}
+
+
+#
+# preload parsedb.pl library
+if (defined $ENV{'REPORT_PATH'}) {
+    eval "use lib qw($ENV{'REPORT_PATH'}/lib)";
+    eval { require qw(parsedb.pl); }
+} else {
+    usage();
+}
+
+
+# check input hosts
+my $host_flag = 0;
+$host_flag = 1 if (($#ARGV+1) > 0);
+
+# validate and open configuration xml
+my $conf = open_conf($xmlcnf);
+
+
+# get docroot
+my $docroot = get_values($conf, "/reporting/*", "docroot");
+die "Error: Cannot find $docroot, check $xmlcnf\n" if (! -d $docroot);
+$docroot = $docroot . "/servers";
+die "Error: Cannot find servers dir $docroot, $!\n" if (! -d $docroot);
+# docroot debug
+# print "docroot=$docroot\n\n";
+
+# get host(s) as an array of hashes
+@hosts = get_values($conf, "/reporting/*", "host");
+print "Configured hosts:" . ($#hosts+1) . "\n";
+
+
+# get the array values
+for my $i ( 0 .. $#hosts ) {
+    for my $key ( keys %{ $hosts[$i] } ) {
+
+        # internal hash format 
+        # key ::= hostname:server|storage -> solaris|linux|...
+
+        my ($hname, $type) = split /:/, $key;
+
+        # check for servers only...
+
+        #print "$key -> $hosts[$i]{$key}\n";
+         
+        if ($host_flag) {
+            for my $k ( 0 .. $#ARGV ) {
+                next if ($ARGV[$k] ne $hname);
+                #print "key:$key -> $hosts[$i]{$key}\n";
+                process_host ($ARGV[$k], $type, $hosts[$i]{$key});
+            }
+        } else {
+            #print "key:$key -> $hosts[$i]{$key}\n";
+            process_host ($hname, $type, $hosts[$i]{$key});
+        }
+    }
+}
+
+
+
+# process commands
+# print  "Input hosts: " . ($#ARGV+1) . "\n";
+
+
+# ########### #
+# SUBROUTINES #
+# ########### #
+
+
+# ######################
+# Name: usage          #
+# ######################
+sub usage {
+        print STDERR <<END;
+USAGE: splitmerge [-cdjNpzwhv] [-R [-i ident]] split|merge [host, ... ]
+Options:
+ -c   : process cpurec raw data
+ -N   : process nicrec raw data
+ -d   : process diskrec raw data
+ -j   : process jvmrec raw data
+ -p   : process procrec raw data
+ -z   : process zonerec raw data
+ -w   : process webrec raw data
+ -R   : realtime updates
+ -i   : indetification host
+ -h   : print help information
+ -v   : verbose mode
+
+Command:
+ split: split raw data
+ merge: merge raw data
+
+Make sure you have correctly exported the following
+environment variable: REPORT_PATH
+END
+    exit 0;
+}
+
+
+# ######################
+# Name: revision       #
+# ######################
+sub revision {
+       print STDERR <<END;
+splitmerge: 0.7.0, 2012-01-01
+END
+    exit 0;
+}
+
+
+sub process_host {
+    # hostname
+    # type: server, storage, ...
+    # os name: solaris, linux, ...
+    my ($hostname, $hosttype, $osname) = @_;
+
+    #print "Hostname: $hostname; Type: $hosttype; OS=$osname \n";
+
+    # check docroot for each target
+    my $dest = $docroot . "/" . $hostname;
+
+    # check destination host
+    if (! -d $dest) {
+        print "Warning: Cannot find host: $hostname under docroot !\n";
+        mkdir "$dest", 0755 or 
+            die "Cannot mkdir $hostname: $!"; 
+    }
+
+} 

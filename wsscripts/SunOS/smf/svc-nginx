@@ -1,0 +1,39 @@
+#!/bin/sh
+NGINX_CMD="/opt/sdr/report/ws/sbin/nginx"
+NGINX_CONF="/opt/sdr/report/ws/conf/nginx.conf"
+RETVAL=0
+
+start() {
+   echo "Starting Nginx Web Server: \c"
+   $NGINX_CMD -c $NGINX_CONF &
+   RETVAL=$?
+   [ $RETVAL -eq 0 ] && echo "ok" || echo "failed"
+   return $RETVAL
+}
+
+stop() {
+   echo "Stopping Nginx Web Server: \c"
+   NGINX_PID=`pgrep -u root -f $NGINX_CMD 2>/dev/null`
+   kill $NGINX_PID >/dev/null 2>&1
+   RETVAL=$?
+   [ $RETVAL -eq 0 ] && echo "ok" || echo "failed"
+   return $RETVAL
+}
+
+case "$1" in
+   start)
+      start
+      ;;
+   stop)
+      stop
+      ;;
+   restart)
+      stop
+      start
+      ;;
+   *)
+      echo "Usage: $0 {start|stop|restart}"
+      exit 1
+esac
+exit $RETVAL
+
