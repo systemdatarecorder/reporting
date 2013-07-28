@@ -23,7 +23,7 @@
 
 # --- MakeMaker const_config section:
 
-# These definitions are from config.sh (via /opt/sdr/report/perl/lib/5.16.2/x86_64-linux/Config.pm).
+# These definitions are from config.sh (via /opt/sdr/report/perl/lib/5.16.3/x86_64-linux/Config.pm).
 # They may have been overridden via Makefile.PL or on the command line.
 AR = ar
 CC = cc
@@ -36,14 +36,14 @@ FULL_AR = /usr/bin/ar
 LD = cc
 LDDLFLAGS = -shared -O3 -L/usr/local/lib -fstack-protector
 LDFLAGS =  -fstack-protector -L/usr/local/lib
-LIBC = 
+LIBC = /lib/libc-2.11.1.so
 LIB_EXT = .a
 OBJ_EXT = .o
 OSNAME = linux
-OSVERS = 3.2.0-36-generic
+OSVERS = 2.6.32-47-server
 RANLIB = :
-SITELIBEXP = /opt/sdr/report/perl/lib/site_perl/5.16.2
-SITEARCHEXP = /opt/sdr/report/perl/lib/site_perl/5.16.2/x86_64-linux
+SITELIBEXP = /opt/sdr/report/perl/lib/site_perl/5.16.3
+SITEARCHEXP = /opt/sdr/report/perl/lib/site_perl/5.16.3/x86_64-linux
 SO = so
 VENDORARCHEXP = 
 VENDORLIBEXP = 
@@ -76,15 +76,15 @@ PREFIX = $(SITEPREFIX)
 PERLPREFIX = /opt/sdr/report/perl
 SITEPREFIX = /opt/sdr/report/perl
 VENDORPREFIX = 
-INSTALLPRIVLIB = /opt/sdr/report/perl/lib/5.16.2
+INSTALLPRIVLIB = /opt/sdr/report/perl/lib/5.16.3
 DESTINSTALLPRIVLIB = $(DESTDIR)$(INSTALLPRIVLIB)
-INSTALLSITELIB = /opt/sdr/report/perl/lib/site_perl/5.16.2
+INSTALLSITELIB = /opt/sdr/report/perl/lib/site_perl/5.16.3
 DESTINSTALLSITELIB = $(DESTDIR)$(INSTALLSITELIB)
 INSTALLVENDORLIB = 
 DESTINSTALLVENDORLIB = $(DESTDIR)$(INSTALLVENDORLIB)
-INSTALLARCHLIB = /opt/sdr/report/perl/lib/5.16.2/x86_64-linux
+INSTALLARCHLIB = /opt/sdr/report/perl/lib/5.16.3/x86_64-linux
 DESTINSTALLARCHLIB = $(DESTDIR)$(INSTALLARCHLIB)
-INSTALLSITEARCH = /opt/sdr/report/perl/lib/site_perl/5.16.2/x86_64-linux
+INSTALLSITEARCH = /opt/sdr/report/perl/lib/site_perl/5.16.3/x86_64-linux
 DESTINSTALLSITEARCH = $(DESTDIR)$(INSTALLSITEARCH)
 INSTALLVENDORARCH = 
 DESTINSTALLVENDORARCH = $(DESTDIR)$(INSTALLVENDORARCH)
@@ -112,14 +112,14 @@ INSTALLSITEMAN3DIR = /opt/sdr/report/perl/man/man3
 DESTINSTALLSITEMAN3DIR = $(DESTDIR)$(INSTALLSITEMAN3DIR)
 INSTALLVENDORMAN3DIR = 
 DESTINSTALLVENDORMAN3DIR = $(DESTDIR)$(INSTALLVENDORMAN3DIR)
-PERL_LIB = /opt/sdr/report/perl/lib/5.16.2
-PERL_ARCHLIB = /opt/sdr/report/perl/lib/5.16.2/x86_64-linux
+PERL_LIB = /opt/sdr/report/perl/lib/5.16.3
+PERL_ARCHLIB = /opt/sdr/report/perl/lib/5.16.3/x86_64-linux
 LIBPERL_A = libperl.a
 FIRST_MAKEFILE = Makefile
 MAKEFILE_OLD = Makefile.old
 MAKE_APERL_FILE = Makefile.aperl
 PERLMAINCC = $(CC)
-PERL_INC = /opt/sdr/report/perl/lib/5.16.2/x86_64-linux/CORE
+PERL_INC = /opt/sdr/report/perl/lib/5.16.3/x86_64-linux/CORE
 PERL = /opt/sdr/report/perl/bin/perl
 FULLPERL = /opt/sdr/report/perl/bin/perl
 ABSPERL = $(PERL)
@@ -134,7 +134,7 @@ PERM_DIR = 755
 PERM_RW = 644
 PERM_RWX = 755
 
-MAKEMAKER   = /opt/sdr/report/perl/lib/5.16.2/ExtUtils/MakeMaker.pm
+MAKEMAKER   = /opt/sdr/report/perl/lib/5.16.3/ExtUtils/MakeMaker.pm
 MM_VERSION  = 6.6302
 MM_REVISION = 66302
 
@@ -200,12 +200,12 @@ AUTOSPLITFILE = $(ABSPERLRUN)  -e 'use AutoSplit;  autosplit($$$$ARGV[0], $$$$AR
 
 # --- MakeMaker tool_xsubpp section:
 
-XSUBPPDIR = /opt/sdr/report/perl/lib/5.16.2/ExtUtils
+XSUBPPDIR = /opt/sdr/report/perl/lib/5.16.3/ExtUtils
 XSUBPP = $(XSUBPPDIR)$(DFSEP)xsubpp
 XSUBPPRUN = $(PERLRUN) $(XSUBPP)
 XSPROTOARG = 
-XSUBPPDEPS = /opt/sdr/report/perl/lib/5.16.2/ExtUtils/typemap $(XSUBPP)
-XSUBPPARGS = -typemap /opt/sdr/report/perl/lib/5.16.2/ExtUtils/typemap
+XSUBPPDEPS = /opt/sdr/report/perl/lib/5.16.3/ExtUtils/typemap $(XSUBPP)
+XSUBPPARGS = -typemap /opt/sdr/report/perl/lib/5.16.3/ExtUtils/typemap
 XSUBPP_EXTRA_ARGS = 
 
 
