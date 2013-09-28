@@ -26,10 +26,10 @@ OS_NAME=`uname -s`
 
 SDRREP_ROOT="/opt/sdr/report"
 BASEDIR="${SDRREP_ROOT}/db/"
-HTTP_CMD="${SDRREP_ROOT}/ws/sbin/nginx"
-HTTP_CONF="${SDRREP_ROOT}/ws/conf/nginx.conf"
-HTTP_PID="${SDRREP_ROOT}/ws/logs/nginx.pid"
-HTTP_FCGI="${SDRREP_ROOT}/ws/fastcgi_temp"
+HTTP_CMD="${SDRREP_ROOT}/sbin/nginx"
+HTTP_CONF="${SDRREP_ROOT}/conf/nginx.conf"
+HTTP_PID="${SDRREP_ROOT}/logs/nginx.pid"
+HTTP_FCGI="${SDRREP_ROOT}/fastcgi_temp"
 NFCGI=1
 
 
@@ -80,13 +80,13 @@ start() {
                 kill -0 `cat ${HTTP_FCGI}/nginx-fcgi.pid` >/dev/null 2>&1
                 if [ $? -eq  1 ]; then
                     rm ${HTTP_FCGI}/nginx-fcgi.pid
-                    ${SDRREP_ROOT}/ws/sbin/nginx-fcgi.boot ${HTTP_FCGI}/nginx-fcgi.sock $NFCGI
+                    ${SDRREP_ROOT}/sbin/nginx-fcgi.boot ${HTTP_FCGI}/nginx-fcgi.sock $NFCGI
                     RETVAL=$?
                 else
                     RETVAL=1
                 fi
             else
-                ${SDRREP_ROOT}/ws/sbin/nginx-fcgi.boot ${HTTP_FCGI}/nginx-fcgi.sock $NFCGI
+                ${SDRREP_ROOT}/sbin/nginx-fcgi.boot ${HTTP_FCGI}/nginx-fcgi.sock $NFCGI
                 RETVAL=$?
             fi
 
