@@ -5,9 +5,9 @@ use warnings FATAL => qw( all );
 use POSIX;
 use IO::Socket::UNIX;
 
-my $fcgi_pid     = '/opt/sdr/report/ws/fastcgi_temp/nginx-fcgi.pid';
-my $fcgi_bin     = '/opt/sdr/report/ws/sbin/nginx-fcgi';
-my $socket_path  = $ARGV[0] || '/opt/sdr/report/ws/fastcgi_temp/nginx-fcgi.sock';
+my $fcgi_pid     = '/opt/sdr/report/fastcgi_temp/nginx-fcgi.pid';
+my $fcgi_bin     = '/opt/sdr/report/sbin/nginx-fcgi';
+my $socket_path  = $ARGV[0] || '/opt/sdr/report/fastcgi_temp/nginx-fcgi.sock';
 my $num_children = $ARGV[1] || 1;
 
 close STDIN;
