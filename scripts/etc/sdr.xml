@@ -1,217 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- 
-
-Target Definition:
-
-Host Mode
-=========
- type       : server, vm, nas, san, firewall, other
- os         : rhel, centos, ubuntu, solaris, freebsd, windows
- rec        : sysl, syslx, cpul, nicl, netl, jvml
- ru         : rack units
- description: short information about server
- interface  : the interfaces, contains
-               arecord  - the A record
-               cname    - the CNAME
-               address  - the IPv4/IPv6 address
-
- workload   : the workload, services running
-
- <host name="myhost01" os="rhel62" rec="syslx,cpul,nicl,netl">
-   <description>Live NGINX HTTP</description>
-   <type>vm</type>
-   <ru>na</ru>
-
-   <interface name="eth0" type="Ethernet" description="prod interface">
-     <arecord></arecord>
-     <cname></cname>
-     <address></address>
-   </interface>
-
-   <interface name="eth1" type="Ethernet" description="mgmt interface">
-     <arecord></arecord>
-     <cname></cname>
-     <address></address>
-   </interface>
-
-   <workload>HTTP</workload>
- </host>
-
-
-Cell Mode
-=========
- input      : the input file for a certain cell
- description: short description of the cell
-
- <cell name="dev" input="dev.conf" description="Dev Cell"/>
- <cell name="it" input="it.conf" description="Integration Test Cell"/>
- <cell name="qa" input="qa.conf" description="Quality Assurance Cell"/>
- <cell name="pd" input="prod.conf" description="Production Cell"/>
-
- where, for example dev.conf will contain a list of one or many host
- defintions.
-
- 
-Datacenter Mode
-===============
- tier       : datacenter tier level 1|2|3|4
- rooms      : number of server rooms per datacenter
- input      : the input file for a certain datacenter
- description: short description of the datacenter
-
- Tier Level:
- 1 Single non-redundant distribution path serving the IT equipment
-   Non-redundant capacity components
-   Basic site infrastructure guaranteeing 99.671% availability
-
- 2 Meets or exceeds all Tier 1 requirements
-   Redundant site infrastructure capacity components guaranteeing 
-   99.741% availability
-
- 3 Meets or exceeds all Tier 1 and Tier 2 requirements
-   Multiple independent distribution paths serving the IT equipment
-   All IT equipment must be dual-powered and fully compatible with the 
-   topology of a site's architecture. Concurrently maintainable site 
-   infrastructure guaranteeing 99.982% availability
-
- 4 Meets or exceeds all Tier 1, Tier 2 and Tier 3 requirements
-   All cooling equipment is independently dual-powered, including chillers 
-   and heating, ventilating and air-conditioning (HVAC) systems. Fault-tolerant
-   site infrastructure with electrical power storage and distribution
-   facilities guaranteeing 99.995% availability
-
- <dc name="lapland" tier="4" input="lapland.conf">
-   <description></description>
-   <location></location>
-   <rooms>1</rooms>
-   <pue></pue>
- </dc>
-
- <dc name="espoo" tier="1" input="espoo.conf">
-   <description></description>
-   <location></location>
-   <rooms>1</rooms>
-   <pue></pue>
- </dc>
-
- a datacenter room, dc would contain a number of racks:
-
- <rack name="rack001" type="19inch/482.6mm">
-  <description></description>
-  <vendor></vendor>
-  <location></location>
-
-   <host name="server1" os="ubuntu" rec="linux">
-    <description>Live NGINX HTTP</description>
-    <type>server</type>
-    <ru>2</ru>
-      
-    <interface></interface>
-    <interface></interface>
-    <interface></interface>
-     
-    <workload></workload> 
-   </host> 
-
-   <host name="server2" os="ubuntu" rec="linux">
-    <description>Live NGINX HTTP</description>
-    <type>server</type>
-    <ru>2</ru>
-      
-    <interface></interface>
-    <interface></interface>
-    <interface></interface>
-     
-    <workload></workload> 
-   </host> 
-
-    ...
-
- </rack>
-
--->
-
 <sdr>
-
-  <recording description="SDR Recording Module Configuration">
-
-    <!-- Default Path -->
-    <base_log path="/opt/sdr/log" description="Base log directory" />
-    <current_log path="/opt/sdr/log/current" description="Current log directory" />
-    <daily_log path="/opt/sdr/log/daily" description="Daily log directory" />
-
-    <!-- SSH Public Key -->
-    <private_key path="" description="The private authentication key" />
-
-    <!-- Instant Monitoring -->
-    <sender description="Sender configuration">
-      <sdrd name="sys"  description="Overall system sysrec.sdrd"  />
-      <sdrd name="cpu"  description="CPU cpurec.sdrd"  />
-      <sdrd name="disk" description="Disk diskrec.sdrd" />
-      <sdrd name="nic"  description="NIC nicrec.sdrd"  />
-    </sender>
-
-    <!-- Target Hosts -->
-
-    <host name="s10u8" os="solaris 10" rec="syss,cpus,nics,nets">
-      <description>Solaris 10 SDr Development</description>
-      <type>vm</type>
-      <ru>na</ru>
-
-      <interface name="e1000g0" type="Ethernet" description="prod interface">
-        <arecord>s10u8</arecord>
-        <cname></cname>
-        <address>192.168.1.26</address>
-      </interface>
-
-      <workload>SDR Development</workload>
-    </host>
-
-    <host name="earth" os="rhel62" rec="syslx,cpul,nicl,netl">
-      <description>Earth VM Hotel</description>
-      <type>server</type>
-      <ru>na</ru>
-
-      <interface name="eth0" type="Ethernet" description="prod interface">
-        <arecord>earth</arecord>
-        <cname></cname>
-        <address>192.168.1.5</address>
-      </interface>
-
-      <workload>VM</workload>
-    </host>
-    
-    <host name="neptune" os="rhel62" rec="syslx,cpul,nicl,netl">
-      <description>SDR DEV</description>
-      <type>server</type>
-      <ru>na</ru>
-
-      <interface name="eth0" type="Ethernet" description="prod interface">
-        <arecord>myhost01.mydomain.com</arecord>
-        <cname></cname>
-        <address>192.168.1.20</address>
-      </interface>
-
-      <workload>HTTP</workload>
-    </host>
-
-    <!--
-    <cell name="dev" input="dev.conf" description="DEV Environment"/>
-    <cell name="sit" input="sit.conf" description="SIT Environment"/>
-    <cell name="qa" input="qa.conf" description="QA Environment"/>
-    <cell name="prod" input="prod.conf" description="PROD Environment"/>
-
-    <dc name="lapland" tier="4" input="lapland.conf">
-      <description></description>
-      <location></location>
-      <rooms>1</rooms>
-      <pue></pue>
-    </dc> -->
-
-  </recording>
-
-
 
   <reporting description="SDR Reporting Module Configuration">
 
@@ -219,66 +8,19 @@ Datacenter Mode
     <db path="/opt/sdr/report/db/" description="SDR Reporting DB"/>
     <docroot path="/opt/sdr/report/docroot/" description="SDR Reporting Docroot"/>
 
-    <!-- Monitoring Objects -->
-    <object name="sysl" params="31" description="Linux 2.6+">
-      <step value="60"/>
-      <!-- cpu -->
-      <ds name="cpupct" type="GAUGE" heartbeat="300" min="0" max="U" />
-      <ds name="sumpct" type="GAUGE" heartbeat="300" min="0" max="U" />
-      <ds name="headpct" type="GAUGE" heartbeat="300" min="0" max="U" />
-      <ds name="userpct" type="GAUGE" heartbeat="300" min="0" max="U" />
-      <ds name="nicepct" type="GAUGE" heartbeat="300" min="0" max="U" />
-      <ds name="syspct" type="GAUGE" heartbeat="300" min="0" max="U" />
-      <ds name="idlepct" type="GAUGE" heartbeat="300" min="0" max="U" />
-      <ds name="iowaitpct" type="GAUGE" heartbeat="300" min="0" max="U" />
-      <ds name="irqpct" type="GAUGE" heartbeat="300" min="0" max="U" />
-      <ds name="softirqpct" type="GAUGE" heartbeat="300" min="0" max="U" />
-      <ds name="stealpct" type="GAUGE" heartbeat="300" min="0" max="U" />
-      <ds name="runqsz" type="GAUGE" heartbeat="300" min="0" max="U" />
-      <ds name="plistsz" type="GAUGE" heartbeat="300" min="0" max="U" />
-      <!-- mem --> 
-      <ds name="memusedpct" type="GAUGE" heartbeat="300" min="0" max="U" />
-      <ds name="swapsedpct" type="GAUGE" heartbeat="300" min="0" max="U" />
-      <!-- disk -->
-      <ds name="readReq" type="GAUGE" heartbeat="300" min="0" max="U" />
-      <ds name="writeReq" type="GAUGE" heartbeat="300" min="0" max="U" />
-      <ds name="totReq" type="GAUGE" heartbeat="300" min="0" max="U" />
-      <ds name="readByt" type="GAUGE" heartbeat="300" min="0" max="U" />
-      <ds name="writeByt" type="GAUGE" heartbeat="300" min="0" max="U" />
-      <ds name="totByt" type="GAUGE" heartbeat="300" min="0" max="U" />
-      <!-- network -->
-      <ds name="rxByt" type="GAUGE" heartbeat="300" min="0" max="U" />
-      <ds name="txByt" type="GAUGE" heartbeat="300" min="0" max="U" />
-      <ds name="ntByt" type="GAUGE" heartbeat="300" min="0" max="U" />
-      <ds name="rxerr" type="GAUGE" heartbeat="300" min="0" max="U" />
-      <ds name="txerr" type="GAUGE" heartbeat="300" min="0" max="U" />
-      <ds name="rxdrp" type="GAUGE" heartbeat="300" min="0" max="U" />
-      <ds name="txdrp" type="GAUGE" heartbeat="300" min="0" max="U" />
-      <!-- LA -->
-      <ds name="avg_1" type="GAUGE" heartbeat="300" min="0" max="U" />
-      <ds name="avg_5" type="GAUGE" heartbeat="300" min="0" max="U" />
-      <ds name="avg_15" type="GAUGE" heartbeat="300" min="0" max="U" />
-      <!-- archives -->
-      <rra type="MIN" xff="0.5" steps="1" rows="1440" />
-      <rra type="MIN" xff="0.5" steps="30" rows="336" />
-      <rra type="MIN" xff="0.5" steps="60" rows="744" />
-      <rra type="MIN" xff="0.5" steps="1440" rows="365" />
-      <rra type="MAX" xff="0.5" steps="1" rows="1440" />
-      <rra type="MAX" xff="0.5" steps="30" rows="336" />
-      <rra type="MAX" xff="0.5" steps="60" rows="744" />
-      <rra type="MAX" xff="0.5" steps="1440" rows="365" />
-      <rra type="LAST" xff="0.5" steps="1" rows="1440" />
-      <rra type="LAST" xff="0.5" steps="30" rows="336" />
-      <rra type="LAST" xff="0.5" steps="60" rows="744" />
-      <rra type="LAST" xff="0.5" steps="1440" rows="365" />
-      <rra type="AVERAGE" xff="0.5" steps="1" rows="1440" />
-      <rra type="AVERAGE" xff="0.5" steps="30" rows="336" />
-      <rra type="AVERAGE" xff="0.5" steps="60" rows="744" />
-      <rra type="AVERAGE" xff="0.5" steps="1440" rows="365" />
-    </object>
+    <!-- Generic Monitoring Events -->
+    <events> <!-- settings with event-triggering rules -->
+      <event name="cpu-alert" object="syslx" metric="cpupct" level="75%" condition="gt" period="90s" gravity="warning" />
+      <event name="mem-alert" object="syslx" metric="realfreepct" level="10%" condition="lt" period="" gravity="error" />
+    </events>
 
-    <object name="syslx" params="42" description="Extended Linux 2.6+">
+
+    <!-- Monitoring Objects -->
+    <object name="syslx" params="42" description="RRDTool System Linux 2.6+">
       <step value="60"/>
+
+      <file name="syslx.rrd"/>
+
       <!-- cpu -->
       <ds name="cpupct" type="GAUGE" heartbeat="300" min="0" max="U" />
       <ds name="sumpct" type="GAUGE" heartbeat="300" min="0" max="U" />
@@ -326,6 +68,7 @@ Datacenter Mode
       <ds name="avg_1" type="GAUGE" heartbeat="300" min="0" max="U" />
       <ds name="avg_5" type="GAUGE" heartbeat="300" min="0" max="U" />
       <ds name="avg_15" type="GAUGE" heartbeat="300" min="0" max="U" />
+
       <!-- archives -->
       <rra type="MIN" xff="0.5" steps="1" rows="1440" />
       <rra type="MIN" xff="0.5" steps="30" rows="336" />
@@ -343,6 +86,37 @@ Datacenter Mode
       <rra type="AVERAGE" xff="0.5" steps="30" rows="336" />
       <rra type="AVERAGE" xff="0.5" steps="60" rows="744" />
       <rra type="AVERAGE" xff="0.5" steps="1440" rows="365" />
+
+      <!-- graphs -->
+      <graph name="cpu_mem">
+        <img interval="3h" file="cpu_mem3h.svg" />
+	<img interval="12h" file="cpu_mem12h.svg" />
+        <img interval="24h" file="cpu_mem24h.svg" />
+        <img interval="3d" file="cpu_mem3d.svg" />
+	<img interval="7d" file="cpu_mem7d.svg" />
+	<img interval="4w" file="cpu_mem4w.svg" />
+	<img interval="12w" file="cpu_mem12w.svg" />
+      </graph>
+
+      <graph name="mem_swap">
+	<img interval="3h" file="mem_swap3h.svg" />
+	<img interval="12h" file="mem_swap12h.svg" />
+	<img interval="24h" file="mem_swap24h.svg" />
+	<img interval="3d" file="mem_swap3d.svg" />
+	<img interval="7d" file="mem_swap7d.svg" />
+	<img interval="4w" file="mem_swap4w.svg" />
+	<img interval="12w" file="mem_swap12w.svg" />
+      </graph>
+
+      <graph name="disk_net">
+        <img interval="3h" file="disk_net3h.svg" />
+	<img interval="12h" file="disk_net12h.svg" />
+        <img interval="24h" file="disk_net24h.svg" />
+	<img interval="3d" file="disk_net3d.svg" />
+	<img interval="7d" file="disk_net7d.svg" />
+	<img interval="4w" file="disk_net4w.svg" />
+	<img interval="12w" file="disk_net12w.svg" />
+      </graph>
     </object> 
 
     <object name="cpul" params="9" description="Linux 2.6+ cpu">
