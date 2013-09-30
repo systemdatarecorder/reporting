@@ -2,7 +2,7 @@
 
 NFCGI=1
 NGINX_WS="/opt/sdr/report"
-NGINX_FCGI="${NGINX_WS}/fastcgi_temp"
+NGINX_FCGI="${NGINX_WS}/logs/fastcgi_temp"
 RETVAL=0
 NGINX_FCGI_PID=
 

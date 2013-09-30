@@ -29,7 +29,7 @@ BASEDIR="${SDRREP_ROOT}/db/"
 HTTP_CMD="${SDRREP_ROOT}/sbin/nginx"
 HTTP_CONF="${SDRREP_ROOT}/conf/nginx.conf"
 HTTP_PID="${SDRREP_ROOT}/logs/nginx.pid"
-HTTP_FCGI="${SDRREP_ROOT}/fastcgi_temp"
+HTTP_FCGI="${SDRREP_ROOT}/logs/fastcgi_temp"
 NFCGI=1
 
 
