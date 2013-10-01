@@ -1,3 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
 <!-- the ID is a number with 21 digits -->
 <subscription id="610352413668166531957">
 
@@ -32,46 +34,84 @@
       <object>syslx</object>
       <object>cpulx</object>
 
-      <!-- the data section contains information about the host that is updated continuously but are not stored in RRDs -->
-      <!-- we could separate this section into another file, but I find storing it here to be more compact -->
+      <!-- 
+         the data section contains information about the host 
+         that is updated continuously but are not stored in RRDs.
+         we could separate this section into another file, but I find 
+         storing it here to be more compact
+      -->
+
       <datafeed>
         <data name="uptime" value="302 days" />
         <data name="lastupdate" value="1380274685" />
 
         <!-- events section -->
-	<!-- this section will contain only the not-acknowledged events; 
-             when an event is acknowledged, it will be removed from this list 
-             and logged somewhere else, if needed -->
+
+	<!-- 
+           this section will contain only the not-acknowledged events; 
+           when an event is acknowledged, it will be removed from this list 
+           and logged somewhere else, if needed
+        -->
+
         <data name="event" id="273" type="1" value"1380274226" />
         <data name="event" id="286" type="2" value"1380274226" />
 
       </datafeed>
 
     </host>
-	</hosts>
+  </hosts>
 
-	<events_settings> <!-- settings with event-triggering rules -->
-		<!-- the syntax for defining a condition to trigger an event must be discussed further -->
-		<event_type id="1" metric="cpu" condition="cpu>95% for time>90s" details="The CPU is above 95% for more than 15 minutes" gravity="warning" />
-		<event_type id="2" metric="mem" condition="mem<10%" details="Free memory is below 10%" gravity="error" />
-	</events_settings>
+  <!-- settings with event-triggering rules -->
+  <events>
 
-	<viewer_subscriptions> <!-- this section stores the view rigths for "child" subscription (viewers)  -->
-		<viewer id="610352459668166532257">
-			<graphs> <!-- define only the graphs and intervals that the user cand see -->
-				<graph name="disk_net">
-					<img interval="3h" />
-					<img interval="12h" />
-				</graph>
-				<graph name="cpu_mem">
-					<img interval="3h" />
-					<img interval="12h" />
-					<img interval="24h" />
-				</graph>
-				<!-- this user can see only disk_net graphs for 3 and 12 hours and cpu_mem graphs for 3, 12 and 24 hours -->
-			</graphs>
-			<!-- if such granularity is not needed, we can (and should!) simplify this section by eliminating the "<img interval...>" items -->
-		</viewer>
-		<!-- account details and password for each viewer subscription will be stored in the accounts.db file; also, in accounts.db file the account will be marked as "child" for this subscription -->
-	</viewer_subscriptions>
+  <!-- 
+     the syntax for defining a condition to trigger an event must 
+     be discussed further 
+  -->
+    <event name="client1-cpu" object="syslx" metric="cpupct" level="75%" condition="gt" period="90s" gravity="warning" />
+    <event name="client1-mem" object="syslx" metric="realfreepct" level="10%" condition="lt" period="90s" gravity="error" />
+
+  </events>
+
+  <!-- this section stores the view rigths for "child" subscription (viewers)  -->
+  <views>
+
+    <view id="610352459668166532257">
+ 
+      <!-- define only the graphs and intervals that the user cand see -->
+      <graphs>
+
+        <graph name="disk_net">
+	  <img interval="3h" />
+          <img interval="12h" />
+	</graph>
+
+	<graph name="cpu_mem">
+	  <img interval="3h" />
+	  <img interval="12h" />
+	  <img interval="24h" />
+	</graph>
+
+	<!-- 
+           this user can see only disk_net graphs for 3 and 12 hours 
+           and cpu_mem graphs for 3, 12 and 24 hours
+        -->
+
+      </graphs>
+
+      <!-- 
+         if such granularity is not needed, we can (and should!) simplify 
+         this section by eliminating the "<img interval...>" items
+      -->
+
+    </view>
+
+    <!--
+       account details and password for each view id subscription will be stored 
+       in the accounts.db file; also, in accounts.db file the account will be marked 
+       as "child" for this subscription
+    -->
+
+  </views>
+
 </subscription>
