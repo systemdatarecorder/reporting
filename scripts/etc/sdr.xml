@@ -9,16 +9,17 @@
     <docroot path="/opt/sdr/report/docroot/" description="SDR Reporting Docroot"/>
 
     <!-- Generic Monitoring Events -->
-    <events> <!-- settings with event-triggering rules -->
+    <!-- settings with event-triggering rules -->
+    <events>
       <event name="cpu-alert" object="syslx" metric="cpupct" level="75%" condition="gt" period="90s" gravity="warning" />
       <event name="mem-alert" object="syslx" metric="realfreepct" level="10%" condition="lt" period="" gravity="error" />
     </events>
 
-
     <!-- Monitoring Objects -->
-    <object name="syslx" params="42" description="RRDTool System Linux 2.6+">
-      <step value="60"/>
 
+    <object name="syslx" params="42" description="RRDtool System Linux 2.6+">
+
+      <step value="60"/>
       <file name="syslx.rrd"/>
 
       <!-- cpu -->
@@ -117,10 +118,15 @@
 	<img interval="4w" file="disk_net4w.svg" />
 	<img interval="12w" file="disk_net12w.svg" />
       </graph>
+
     </object> 
 
-    <object name="cpul" params="9" description="Linux 2.6+ cpu">
+
+    <object name="cpulx" params="9" description="RRDtool Linux 2.6+ cpu">
+
       <step value="60"/>
+      <file name="cpulx.rrd"/>
+
       <!-- cpu -->
       <ds name="userpct" type="GAUGE" heartbeat="300" min="0" max="U" />
       <ds name="nicepct" type="GAUGE" heartbeat="300" min="0" max="U" />
@@ -131,6 +137,7 @@
       <ds name="softirqpct" type="GAUGE" heartbeat="300" min="0" max="U" />
       <ds name="iowaitpct" type="GAUGE" heartbeat="300" min="0" max="U" />
       <ds name="stealpct" type="GAUGE" heartbeat="300" min="0" max="U" />
+
       <!-- archives -->
       <rra type="MIN" xff="0.5" steps="1" rows="1440" />
       <rra type="MIN" xff="0.5" steps="30" rows="336" />
@@ -148,10 +155,26 @@
       <rra type="AVERAGE" xff="0.5" steps="30" rows="336" />
       <rra type="AVERAGE" xff="0.5" steps="60" rows="744" />
       <rra type="AVERAGE" xff="0.5" steps="1440" rows="365" />
+
+      <!-- graphs -->
+      <graph name="cpu">
+        <img interval="3h" file="cpu3h.svg" />
+	<img interval="12h" file="cpu12h.svg" />
+        <img interval="24h" file="cpu24h.svg" />
+        <img interval="3d" file="cpu3d.svg" />
+	<img interval="7d" file="cpu7d.svg" />
+	<img interval="4w" file="cpu4w.svg" />
+	<img interval="12w" file="cpu12w.svg" />
+      </graph>
+
     </object>
 
-    <object name="nicl" params="9" description="Linux 2.6+ nic">
+
+    <object name="niclx" params="9" description="RRDtool Linux 2.6+ nic">
+
       <step value="60"/>
+      <file name="niclx.rrd"/>
+
       <!-- nic -->
       <ds name="rxkb" type="GAUGE" heartbeat="300" min="0" max="U" />
       <ds name="rxpcks" type="GAUGE" heartbeat="300" min="0" max="U" />
@@ -171,6 +194,7 @@
       <ds name="txcompr" type="GAUGE" heartbeat="300" min="0" max="U" />
       <ds name="ttpcks" type="GAUGE" heartbeat="300" min="0" max="U" />
       <ds name="ttkb" type="GAUGE" heartbeat="300" min="0" max="U" />
+
       <!-- archives -->
       <rra type="MIN" xff="0.5" steps="1" rows="1440" />
       <rra type="MIN" xff="0.5" steps="30" rows="336" />
@@ -188,10 +212,26 @@
       <rra type="AVERAGE" xff="0.5" steps="30" rows="336" />
       <rra type="AVERAGE" xff="0.5" steps="60" rows="744" />
       <rra type="AVERAGE" xff="0.5" steps="1440" rows="365" />
+
+      <!-- graphs -->
+      <graph name="nic">
+        <img interval="3h" file="nic3h.svg" />
+	<img interval="12h" file="nic12h.svg" />
+        <img interval="24h" file="nic24h.svg" />
+        <img interval="3d" file="nic3d.svg" />
+	<img interval="7d" file="nic7d.svg" />
+	<img interval="4w" file="nic4w.svg" />
+	<img interval="12w" file="nic12w.svg" />
+      </graph>
+
     </object> 
 
-    <object name="netl" params="" description="Linux 2.6+ net">
+
+    <object name="netlx" params="" description="RRDtool Linux 2.6+ net">
+
       <step value="60"/>
+      <file name="netlx.rrd"/>
+
       <!-- net -->
       <ds name="active" type="COUNTER" heartbeat="300" min="0" max="U" />
       <ds name="passive" type="COUNTER" heartbeat="300" min="0" max="U" />
@@ -204,6 +244,7 @@
       <ds name="fast_retr" type="COUNTER" heartbeat="300" min="0" max="U" />
       <ds name="fwd_retr" type="COUNTER" heartbeat="300" min="0" max="U" />
       <ds name="slow_retr" type="COUNTER" heartbeat="300" min="0" max="U" />
+
       <!-- archives -->
       <rra type="MIN" xff="0.5" steps="1" rows="1440" />
       <rra type="MIN" xff="0.5" steps="30" rows="336" />
@@ -221,10 +262,26 @@
       <rra type="AVERAGE" xff="0.5" steps="30" rows="336" />
       <rra type="AVERAGE" xff="0.5" steps="60" rows="744" />
       <rra type="AVERAGE" xff="0.5" steps="1440" rows="365" />
+
+      <!-- graphs -->
+      <graph name="net">
+        <img interval="3h" file="net3h.svg" />
+	<img interval="12h" file="net12h.svg" />
+        <img interval="24h" file="net24h.svg" />
+        <img interval="3d" file="net3d.svg" />
+	<img interval="7d" file="net7d.svg" />
+	<img interval="4w" file="net4w.svg" />
+	<img interval="12w" file="net12w.svg" />
+      </graph>
+
     </object> 
 
-    <object name="jvml" params="" description="Linux 2.6+ jvm">
+
+    <object name="jvmlx" params="" description="RRDtool Linux 2.6+ jvm">
+
       <step value="300"/>
+      <file name="jvmlx.rrd"/>
+
       <!-- jvm -->
       <ds name="s0pct" type="GAUGE" heartbeat="600" min="0" max="U" />
       <ds name="s1pct" type="GAUGE" heartbeat="600" min="0" max="U" />
@@ -247,6 +304,7 @@
       <ds name="syscw" type="GAUGE" heartbeat="600" min="0" max="U" />
       <ds name="wchar" type="GAUGE" heartbeat="600" min="0" max="U" />
       <ds name="write_bytes" type="GAUGE" heartbeat="600" min="0" max="U" />
+
       <!-- archives -->
       <rra type="MIN" xff="0.5" steps="1" rows="1440" />
       <rra type="MIN" xff="0.5" steps="30" rows="336" />
@@ -264,12 +322,28 @@
       <rra type="AVERAGE" xff="0.5" steps="30" rows="336" />
       <rra type="AVERAGE" xff="0.5" steps="60" rows="744" />
       <rra type="AVERAGE" xff="0.5" steps="1440" rows="365" />
+
+      <!-- graphs -->
+      <graph name="jvm">
+        <img interval="3h" file="jvm3h.svg" />
+	<img interval="12h" file="jvm12h.svg" />
+        <img interval="24h" file="jvm24h.svg" />
+        <img interval="3d" file="jvm3d.svg" />
+	<img interval="7d" file="jvm7d.svg" />
+	<img interval="4w" file="jvm4w.svg" />
+	<img interval="12w" file="jvm12w.svg" />
+      </graph>
+
     </object>
+
 
     <!-- Solaris Operating System -->
 
-    <object name="syss" params="18" description="Solaris 10+">
+    <object name="syssl" params="18" description="RRDtool Solaris 10+">
+
       <step value="60"/>
+      <file name="syssl.rrd"/>
+
       <!-- cpu -->
       <ds name="cpupct" type="GAUGE" heartbeat="300" min="0" max="U" />
       <ds name="sumpct" type="GAUGE" heartbeat="300" min="0" max="U" />
@@ -293,6 +367,7 @@
       <ds name="avg_1" type="GAUGE" heartbeat="300" min="0" max="U" />
       <ds name="avg_5" type="GAUGE" heartbeat="300" min="0" max="U" />
       <ds name="avg_15" type="GAUGE" heartbeat="300" min="0" max="U" />
+
       <!-- archives -->
       <rra type="MIN" xff="0.5" steps="1" rows="1440" />
       <rra type="MIN" xff="0.5" steps="30" rows="336" />
@@ -310,10 +385,46 @@
       <rra type="AVERAGE" xff="0.5" steps="30" rows="336" />
       <rra type="AVERAGE" xff="0.5" steps="60" rows="744" />
       <rra type="AVERAGE" xff="0.5" steps="1440" rows="365" />
+
+      <!-- graphs -->
+      <graph name="cpu_mem">
+        <img interval="3h" file="cpu_mem3h.svg" />
+	<img interval="12h" file="cpu_mem12h.svg" />
+        <img interval="24h" file="cpu_mem24h.svg" />
+        <img interval="3d" file="cpu_mem3d.svg" />
+	<img interval="7d" file="cpu_mem7d.svg" />
+	<img interval="4w" file="cpu_mem4w.svg" />
+	<img interval="12w" file="cpu_mem12w.svg" />
+      </graph>
+
+      <graph name="mem_swap">
+	<img interval="3h" file="mem_swap3h.svg" />
+	<img interval="12h" file="mem_swap12h.svg" />
+	<img interval="24h" file="mem_swap24h.svg" />
+	<img interval="3d" file="mem_swap3d.svg" />
+	<img interval="7d" file="mem_swap7d.svg" />
+	<img interval="4w" file="mem_swap4w.svg" />
+	<img interval="12w" file="mem_swap12w.svg" />
+      </graph>
+
+      <graph name="disk_net">
+        <img interval="3h" file="disk_net3h.svg" />
+	<img interval="12h" file="disk_net12h.svg" />
+        <img interval="24h" file="disk_net24h.svg" />
+	<img interval="3d" file="disk_net3d.svg" />
+	<img interval="7d" file="disk_net7d.svg" />
+	<img interval="4w" file="disk_net4w.svg" />
+	<img interval="12w" file="disk_net12w.svg" />
+      </graph>
+
     </object>
 
-    <object name="cpus" params="11" description="Solaris 10+">
+
+    <object name="cpusl" params="11" description="RRDtool Solaris 10+">
+
       <step value="60"/>
+      <file name="cpusl.rrd"/>
+
       <!-- cpu -->
       <ds name="xcalls" type="GAUGE" heartbeat="300" min="0" max="U" />
       <ds name="intr" type="GAUGE" heartbeat="300" min="0" max="U" />
@@ -326,6 +437,7 @@
       <ds name="userpct" type="GAUGE" heartbeat="300" min="0" max="U" />
       <ds name="syspct" type="GAUGE" heartbeat="300" min="0" max="U" />
       <ds name="idlepct" type="GAUGE" heartbeat="300" min="0" max="U" />
+
       <!-- archives -->
       <rra type="MIN" xff="0.5" steps="1" rows="1440" />
       <rra type="MIN" xff="0.5" steps="30" rows="336" />
@@ -343,10 +455,26 @@
       <rra type="AVERAGE" xff="0.5" steps="30" rows="336" />
       <rra type="AVERAGE" xff="0.5" steps="60" rows="744" />
       <rra type="AVERAGE" xff="0.5" steps="1440" rows="365" />
+
+      <!-- graphs -->
+      <graph name="cpu">
+        <img interval="3h" file="cpu3h.svg" />
+	<img interval="12h" file="cpu12h.svg" />
+        <img interval="24h" file="cpu24h.svg" />
+        <img interval="3d" file="cpu3d.svg" />
+	<img interval="7d" file="cpu7d.svg" />
+	<img interval="4w" file="cpu4w.svg" />
+	<img interval="12w" file="cpu12w.svg" />
+      </graph>
+
     </object>
 
-    <object name="nics" params="8" description="Solaris 10+">
+
+    <object name="nicsl" params="8" description="RRDtool Solaris 10+">
+
       <step value="60"/>
+      <file name="nicsl.rrd"/>
+
       <!-- nic -->
       <ds name="rkb" type="GAUGE" heartbeat="300" min="0" max="U" />
       <ds name="wkb" type="GAUGE" heartbeat="300" min="0" max="U" />
@@ -356,6 +484,7 @@
       <ds name="wavg" type="GAUGE" heartbeat="300" min="0" max="U" />
       <ds name="util" type="GAUGE" heartbeat="300" min="0" max="U" />
       <ds name="sat" type="GAUGE" heartbeat="300" min="0" max="U" />
+
       <!-- archives -->
       <rra type="MIN" xff="0.5" steps="1" rows="1440" />
       <rra type="MIN" xff="0.5" steps="30" rows="336" />
@@ -373,10 +502,26 @@
       <rra type="AVERAGE" xff="0.5" steps="30" rows="336" />
       <rra type="AVERAGE" xff="0.5" steps="60" rows="744" />
       <rra type="AVERAGE" xff="0.5" steps="1440" rows="365" />
+
+      <!-- graphs -->
+      <graph name="nic">
+        <img interval="3h" file="nic3h.svg" />
+	<img interval="12h" file="nic12h.svg" />
+        <img interval="24h" file="nic24h.svg" />
+        <img interval="3d" file="nic3d.svg" />
+	<img interval="7d" file="nic7d.svg" />
+	<img interval="4w" file="nic4w.svg" />
+	<img interval="12w" file="nic12w.svg" />
+      </graph>
+
     </object>
 
-    <object name="nets" params="24" description="Solaris 10+">
+
+    <object name="netsl" params="24" description="RRDtool Solaris 10+">
+
       <step value="60"/>
+      <file name="netsl.rrd"/>
+
       <!-- net -->
       <ds name="udpInDatagrams" type="COUNTER" heartbeat="300" min="0" max="U" />
       <ds name="udpInErr" type="COUNTER" heartbeat="300" min="0" max="U" />
@@ -402,6 +547,7 @@
       <ds name="ipInCksumErr" type="COUNTER" heartbeat="300" min="0" max="U" />
       <ds name="tcpInErr" type="COUNTER" heartbeat="300" min="0" max="U" />
       <ds name="udpInCksumErr" type="COUNTER" heartbeat="300" min="0" max="U" />
+
       <!-- archives -->
       <rra type="MIN" xff="0.5" steps="1" rows="1440" />
       <rra type="MIN" xff="0.5" steps="30" rows="336" />
@@ -419,10 +565,26 @@
       <rra type="AVERAGE" xff="0.5" steps="30" rows="336" />
       <rra type="AVERAGE" xff="0.5" steps="60" rows="744" />
       <rra type="AVERAGE" xff="0.5" steps="1440" rows="365" />
+
+      <!-- graphs -->
+      <graph name="net">
+        <img interval="3h" file="net3h.svg" />
+	<img interval="12h" file="net12h.svg" />
+        <img interval="24h" file="net24h.svg" />
+        <img interval="3d" file="net3d.svg" />
+	<img interval="7d" file="net7d.svg" />
+	<img interval="4w" file="net4w.svg" />
+	<img interval="12w" file="net12w.svg" />
+      </graph>
+
     </object>
 
-    <object name="jvms" params="" description="Solaris 10+ jvm">
+
+    <object name="jvms" params="" description="RRDtool Solaris 10+ jvm">
+
       <step value="300"/>
+      <file name="jvmsl.rrd"/>
+
       <!-- jvm -->
       <ds name="s0pct" type="GAUGE" heartbeat="600" min="0" max="U" />
       <ds name="s1pct" type="GAUGE" heartbeat="600" min="0" max="U" />
@@ -434,6 +596,7 @@
       <ds name="fullgc" type="COUNTER" heartbeat="600" min="0" max="U" />
       <ds name="tfullgc" type="GAUGE" heartbeat="600" min="0" max="U" />
       <ds name="ttgc" type="GAUGE" heartbeat="600" min="0" max="U" />
+
       <!-- archives -->
       <rra type="MIN" xff="0.5" steps="1" rows="1440" />
       <rra type="MIN" xff="0.5" steps="30" rows="336" />
@@ -451,6 +614,18 @@
       <rra type="AVERAGE" xff="0.5" steps="30" rows="336" />
       <rra type="AVERAGE" xff="0.5" steps="60" rows="744" />
       <rra type="AVERAGE" xff="0.5" steps="1440" rows="365" />
+
+      <!-- graphs -->
+      <graph name="jvm">
+        <img interval="3h" file="jvm3h.svg" />
+	<img interval="12h" file="jvm12h.svg" />
+        <img interval="24h" file="jvm24h.svg" />
+        <img interval="3d" file="jvm3d.svg" />
+	<img interval="7d" file="jvm7d.svg" />
+	<img interval="4w" file="jvm4w.svg" />
+	<img interval="12w" file="jvm12w.svg" />
+      </graph>
+
     </object> 
 
   </reporting>
