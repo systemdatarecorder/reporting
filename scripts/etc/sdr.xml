@@ -90,33 +90,33 @@
 
       <!-- graphs -->
       <graph name="cpu_mem">
-        <img interval="3h" file="cpu_mem3h.svg" />
-	<img interval="12h" file="cpu_mem12h.svg" />
-        <img interval="24h" file="cpu_mem24h.svg" />
-        <img interval="3d" file="cpu_mem3d.svg" />
-	<img interval="7d" file="cpu_mem7d.svg" />
-	<img interval="4w" file="cpu_mem4w.svg" />
-	<img interval="12w" file="cpu_mem12w.svg" />
+        <img interval="3h" file="sys/cpu_mem3h.svg" />
+	<img interval="12h" file="sys/cpu_mem12h.svg" />
+        <img interval="24h" file="sys/cpu_mem24h.svg" />
+        <img interval="3d" file="sys/cpu_mem3d.svg" />
+	<img interval="7d" file="sys/cpu_mem7d.svg" />
+	<img interval="4w" file="sys/cpu_mem4w.svg" />
+	<img interval="12w" file="sys/cpu_mem12w.svg" />
       </graph>
 
       <graph name="mem_swap">
-	<img interval="3h" file="mem_swap3h.svg" />
-	<img interval="12h" file="mem_swap12h.svg" />
-	<img interval="24h" file="mem_swap24h.svg" />
-	<img interval="3d" file="mem_swap3d.svg" />
-	<img interval="7d" file="mem_swap7d.svg" />
-	<img interval="4w" file="mem_swap4w.svg" />
-	<img interval="12w" file="mem_swap12w.svg" />
+	<img interval="3h" file="sys/mem_swap3h.svg" />
+	<img interval="12h" file="sys/mem_swap12h.svg" />
+	<img interval="24h" file="sys/mem_swap24h.svg" />
+	<img interval="3d" file="sys/mem_swap3d.svg" />
+	<img interval="7d" file="sys/mem_swap7d.svg" />
+	<img interval="4w" file="sys/mem_swap4w.svg" />
+	<img interval="12w" file="sys/mem_swap12w.svg" />
       </graph>
 
       <graph name="disk_net">
-        <img interval="3h" file="disk_net3h.svg" />
-	<img interval="12h" file="disk_net12h.svg" />
-        <img interval="24h" file="disk_net24h.svg" />
-	<img interval="3d" file="disk_net3d.svg" />
-	<img interval="7d" file="disk_net7d.svg" />
-	<img interval="4w" file="disk_net4w.svg" />
-	<img interval="12w" file="disk_net12w.svg" />
+        <img interval="3h" file="sys/disk_net3h.svg" />
+	<img interval="12h" file="sys/disk_net12h.svg" />
+        <img interval="24h" file="sys/disk_net24h.svg" />
+	<img interval="3d" file="sys/disk_net3d.svg" />
+	<img interval="7d" file="sys/disk_net7d.svg" />
+	<img interval="4w" file="sys/disk_net4w.svg" />
+	<img interval="12w" file="sys/disk_net12w.svg" />
       </graph>
 
     </object> 
@@ -158,13 +158,13 @@
 
       <!-- graphs -->
       <graph name="cpu">
-        <img interval="3h" file="cpu3h.svg" />
-	<img interval="12h" file="cpu12h.svg" />
-        <img interval="24h" file="cpu24h.svg" />
-        <img interval="3d" file="cpu3d.svg" />
-	<img interval="7d" file="cpu7d.svg" />
-	<img interval="4w" file="cpu4w.svg" />
-	<img interval="12w" file="cpu12w.svg" />
+        <img interval="3h" file="cpu/cpu3h.svg" />
+	<img interval="12h" file="cpu/cpu12h.svg" />
+        <img interval="24h" file="cpu/cpu24h.svg" />
+        <img interval="3d" file="cpu/cpu3d.svg" />
+	<img interval="7d" file="cpu/cpu7d.svg" />
+	<img interval="4w" file="cpu/cpu4w.svg" />
+	<img interval="12w" file="cpu/cpu12w.svg" />
       </graph>
 
     </object>
@@ -215,13 +215,13 @@
 
       <!-- graphs -->
       <graph name="nic">
-        <img interval="3h" file="nic3h.svg" />
-	<img interval="12h" file="nic12h.svg" />
-        <img interval="24h" file="nic24h.svg" />
-        <img interval="3d" file="nic3d.svg" />
-	<img interval="7d" file="nic7d.svg" />
-	<img interval="4w" file="nic4w.svg" />
-	<img interval="12w" file="nic12w.svg" />
+        <img interval="3h" file="nic/nic3h.svg" />
+	<img interval="12h" file="nic/nic12h.svg" />
+        <img interval="24h" file="nic/nic24h.svg" />
+        <img interval="3d" file="nic/nic3d.svg" />
+	<img interval="7d" file="nic/nic7d.svg" />
+	<img interval="4w" file="nic/nic4w.svg" />
+	<img interval="12w" file="nic/nic12w.svg" />
       </graph>
 
     </object> 
@@ -265,13 +265,13 @@
 
       <!-- graphs -->
       <graph name="net">
-        <img interval="3h" file="net3h.svg" />
-	<img interval="12h" file="net12h.svg" />
-        <img interval="24h" file="net24h.svg" />
-        <img interval="3d" file="net3d.svg" />
-	<img interval="7d" file="net7d.svg" />
-	<img interval="4w" file="net4w.svg" />
-	<img interval="12w" file="net12w.svg" />
+        <img interval="3h" file="net/net3h.svg" />
+	<img interval="12h" file="net/net12h.svg" />
+        <img interval="24h" file="net/net24h.svg" />
+        <img interval="3d" file="net/net3d.svg" />
+	<img interval="7d" file="net/net7d.svg" />
+	<img interval="4w" file="net/net4w.svg" />
+	<img interval="12w" file="net/net12w.svg" />
       </graph>
 
     </object> 
@@ -325,13 +325,13 @@
 
       <!-- graphs -->
       <graph name="jvm">
-        <img interval="3h" file="jvm3h.svg" />
-	<img interval="12h" file="jvm12h.svg" />
-        <img interval="24h" file="jvm24h.svg" />
-        <img interval="3d" file="jvm3d.svg" />
-	<img interval="7d" file="jvm7d.svg" />
-	<img interval="4w" file="jvm4w.svg" />
-	<img interval="12w" file="jvm12w.svg" />
+        <img interval="3h" file="jvm/jvm3h.svg" />
+	<img interval="12h" file="jvm/jvm12h.svg" />
+        <img interval="24h" file="jvm/jvm24h.svg" />
+        <img interval="3d" file="jvm/jvm3d.svg" />
+	<img interval="7d" file="jvm/jvm7d.svg" />
+	<img interval="4w" file="jvm/jvm4w.svg" />
+	<img interval="12w" file="jvm/jvm12w.svg" />
       </graph>
 
     </object>
@@ -388,33 +388,33 @@
 
       <!-- graphs -->
       <graph name="cpu_mem">
-        <img interval="3h" file="cpu_mem3h.svg" />
-	<img interval="12h" file="cpu_mem12h.svg" />
-        <img interval="24h" file="cpu_mem24h.svg" />
-        <img interval="3d" file="cpu_mem3d.svg" />
-	<img interval="7d" file="cpu_mem7d.svg" />
-	<img interval="4w" file="cpu_mem4w.svg" />
-	<img interval="12w" file="cpu_mem12w.svg" />
+        <img interval="3h" file="sys/cpu_mem3h.svg" />
+	<img interval="12h" file="sys/cpu_mem12h.svg" />
+        <img interval="24h" file="sys/cpu_mem24h.svg" />
+        <img interval="3d" file="sys/cpu_mem3d.svg" />
+	<img interval="7d" file="sys/cpu_mem7d.svg" />
+	<img interval="4w" file="sys/cpu_mem4w.svg" />
+	<img interval="12w" file="sys/cpu_mem12w.svg" />
       </graph>
 
       <graph name="mem_swap">
-	<img interval="3h" file="mem_swap3h.svg" />
-	<img interval="12h" file="mem_swap12h.svg" />
-	<img interval="24h" file="mem_swap24h.svg" />
-	<img interval="3d" file="mem_swap3d.svg" />
-	<img interval="7d" file="mem_swap7d.svg" />
-	<img interval="4w" file="mem_swap4w.svg" />
-	<img interval="12w" file="mem_swap12w.svg" />
+	<img interval="3h" file="sys/mem_swap3h.svg" />
+	<img interval="12h" file="sys/mem_swap12h.svg" />
+	<img interval="24h" file="sys/mem_swap24h.svg" />
+	<img interval="3d" file="sys/mem_swap3d.svg" />
+	<img interval="7d" file="sys/mem_swap7d.svg" />
+	<img interval="4w" file="sys/mem_swap4w.svg" />
+	<img interval="12w" file="sys/mem_swap12w.svg" />
       </graph>
 
       <graph name="disk_net">
-        <img interval="3h" file="disk_net3h.svg" />
-	<img interval="12h" file="disk_net12h.svg" />
-        <img interval="24h" file="disk_net24h.svg" />
-	<img interval="3d" file="disk_net3d.svg" />
-	<img interval="7d" file="disk_net7d.svg" />
-	<img interval="4w" file="disk_net4w.svg" />
-	<img interval="12w" file="disk_net12w.svg" />
+        <img interval="3h" file="disk/disk_net3h.svg" />
+	<img interval="12h" file="disk/disk_net12h.svg" />
+        <img interval="24h" file="disk/disk_net24h.svg" />
+	<img interval="3d" file="disk/disk_net3d.svg" />
+	<img interval="7d" file="disk/disk_net7d.svg" />
+	<img interval="4w" file="disk/disk_net4w.svg" />
+	<img interval="12w" file="disk/disk_net12w.svg" />
       </graph>
 
     </object>
@@ -458,13 +458,13 @@
 
       <!-- graphs -->
       <graph name="cpu">
-        <img interval="3h" file="cpu3h.svg" />
-	<img interval="12h" file="cpu12h.svg" />
-        <img interval="24h" file="cpu24h.svg" />
-        <img interval="3d" file="cpu3d.svg" />
-	<img interval="7d" file="cpu7d.svg" />
-	<img interval="4w" file="cpu4w.svg" />
-	<img interval="12w" file="cpu12w.svg" />
+        <img interval="3h" file="cpu/cpu3h.svg" />
+	<img interval="12h" file="cpu/cpu12h.svg" />
+        <img interval="24h" file="cpu/cpu24h.svg" />
+        <img interval="3d" file="cpu/cpu3d.svg" />
+	<img interval="7d" file="cpu/cpu7d.svg" />
+	<img interval="4w" file="cpu/cpu4w.svg" />
+	<img interval="12w" file="cpu/cpu12w.svg" />
       </graph>
 
     </object>
@@ -505,13 +505,13 @@
 
       <!-- graphs -->
       <graph name="nic">
-        <img interval="3h" file="nic3h.svg" />
-	<img interval="12h" file="nic12h.svg" />
-        <img interval="24h" file="nic24h.svg" />
-        <img interval="3d" file="nic3d.svg" />
-	<img interval="7d" file="nic7d.svg" />
-	<img interval="4w" file="nic4w.svg" />
-	<img interval="12w" file="nic12w.svg" />
+        <img interval="3h" file="nic/nic3h.svg" />
+	<img interval="12h" file="nic/nic12h.svg" />
+        <img interval="24h" file="nic/nic24h.svg" />
+        <img interval="3d" file="nic/nic3d.svg" />
+	<img interval="7d" file="nic/nic7d.svg" />
+	<img interval="4w" file="nic/nic4w.svg" />
+	<img interval="12w" file="nic/nic12w.svg" />
       </graph>
 
     </object>
@@ -568,13 +568,13 @@
 
       <!-- graphs -->
       <graph name="net">
-        <img interval="3h" file="net3h.svg" />
-	<img interval="12h" file="net12h.svg" />
-        <img interval="24h" file="net24h.svg" />
-        <img interval="3d" file="net3d.svg" />
-	<img interval="7d" file="net7d.svg" />
-	<img interval="4w" file="net4w.svg" />
-	<img interval="12w" file="net12w.svg" />
+        <img interval="3h" file="net/net3h.svg" />
+	<img interval="12h" file="net/net12h.svg" />
+        <img interval="24h" file="net/net24h.svg" />
+        <img interval="3d" file="net/net3d.svg" />
+	<img interval="7d" file="net/net7d.svg" />
+	<img interval="4w" file="net/net4w.svg" />
+	<img interval="12w" file="net/net12w.svg" />
       </graph>
 
     </object>
@@ -617,13 +617,13 @@
 
       <!-- graphs -->
       <graph name="jvm">
-        <img interval="3h" file="jvm3h.svg" />
-	<img interval="12h" file="jvm12h.svg" />
-        <img interval="24h" file="jvm24h.svg" />
-        <img interval="3d" file="jvm3d.svg" />
-	<img interval="7d" file="jvm7d.svg" />
-	<img interval="4w" file="jvm4w.svg" />
-	<img interval="12w" file="jvm12w.svg" />
+        <img interval="3h" file="jvm/jvm3h.svg" />
+	<img interval="12h" file="jvm/jvm12h.svg" />
+        <img interval="24h" file="jvm/jvm24h.svg" />
+        <img interval="3d" file="jvm/jvm3d.svg" />
+	<img interval="7d" file="jvm/jvm7d.svg" />
+	<img interval="4w" file="jvm/jvm4w.svg" />
+	<img interval="12w" file="jvm/jvm12w.svg" />
       </graph>
 
     </object> 
