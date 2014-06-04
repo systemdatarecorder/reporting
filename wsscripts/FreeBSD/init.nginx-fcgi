@@ -1,0 +1,100 @@
+#!/bin/sh
+
+NFCGI=1
+NGINX_WS="/opt/sdr/report"
+NGINX_FCGI="${NGINX_WS}/logs/fastcgi_temp"
+RETVAL=0
+NGINX_FCGI_PID=
+
+start() {
+
+    case "$NGINX_FCGIMODULE" in
+        nginx-fcgi.pl)
+            echo "Starting Nginx FCGI daemon: \c"
+            if [ -f ${NGINX_FCGI}/nginx-fcgi.pid ]; then
+                ps -p `cat ${NGINX_FCGI}/nginx-fcgi.pid` >/dev/null 2>&1
+                if [ $? -eq  1 ]; then
+                    # print "Error: Target not found: restarting..."
+                    rm ${NGINX_FCGI}/nginx-fcgi.pid
+                    /usr/bin/su - nobody \
+                      -c "${NGINX_WS}/sbin/nginx-fcgi -l ${NGINX_FCGI}/nginx-fcgi.log \
+                      -pid ${NGINX_FCGI}/nginx-fcgi.pid \
+                      -S ${NGINX_FCGI}/nginx-fcgi.sock"
+                    RETVAL=$?
+                else
+                    RETVAL=1
+                fi
+            else
+                /usr/bin/su - nobody \
+                 -c "${NGINX_WS}/sbin/nginx-fcgi -l ${NGINX_FCGI}/nginx-fcgi.log \
+                 -pid ${NGINX_FCGI}/nginx-fcgi.pid \
+                 -S ${NGINX_FCGI}/nginx-fcgi.sock"
+                 RETVAL=$?
+            fi
+
+            [ $RETVAL -eq 0 ] && echo "ok" || echo "failed"
+            return $RETVAL
+            ;;
+
+        nginx-fcgi)
+            echo "Starting Nginx FCGI daemon: \c"
+            if [ -f ${NGINX_FCGI}/nginx-fcgi.pid ]; then
+                ps -p `cat ${NGINX_FCGI}/nginx-fcgi.pid` >/dev/null 2>&1
+                if [ $? -eq  1 ]; then
+                    rm ${NGINX_FCGI}/nginx-fcgi.pid
+                    /usr/bin/su - nobody \
+                     -c "${NGINX_WS}/sbin/nginx-fcgi.boot ${NGINX_FCGI}/nginx-fcgi.sock $NFCGI"
+                    RETVAL=$?
+                else
+                    RETVAL=1
+                fi
+            else
+                /usr/bin/su - nobody \
+                  -c "${NGINX_WS}/sbin/nginx-fcgi.boot ${NGINX_FCGI}/nginx-fcgi.sock $NFCGI"
+                RETVAL=$?
+            fi
+            [ $RETVAL -eq 0 ] && echo "ok" || echo "failed"
+            return $RETVAL
+            ;;
+
+        *)
+            echo "Unknow module value...exiting"
+            exit 1
+            ;;
+    esac
+}
+
+
+stop() {
+
+    echo "Stopping Nginx FCGI Daemon: \c"
+    NGINX_FCGI_PID=`pgrep -u nobody 'nginx-fcgi' 2>/dev/null`
+    kill $NGINX_FCGI_PID >/dev/null 2>&1
+    RETVAL=$?
+    [ $RETVAL -eq 0 ] && echo "ok" || echo "failed"
+    return $RETVAL
+}
+
+
+
+NGINX_FCGIMODULE=`ls -lrt ${NGINX_WS}/sbin/nginx-fcgi | awk '{print $NF}'`
+
+case "$1" in
+   start)
+      start
+      ;;
+   stop)
+      stop
+      ;;
+   restart)
+      stop
+      start
+      ;;
+   *)
+      echo "Usage: $0 {start|stop|restart}"
+      exit 1
+esac
+exit $RETVAL
+
+#chmod 777 /var/run/nginx-fcgi.sock
+#chown nginx:nginx /var/run/nginx-fcgi.sock
