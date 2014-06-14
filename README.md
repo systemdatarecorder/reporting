@@ -10,4 +10,7 @@ The reporting module, consists of several key technologies: a non-relational dat
 Built on top of Perl, R, RRDtool and NGINX contains two main sub-modules: data input layer, responsible to handle all incoming data from all active hosts and data processin layer, managing all data analysis, plotting and reporting part. These two sub-modules can operate independently of each other. The kernel as well if offering a minimal API to export to the other consumers, via JSON, all aggregated data over HTTP or HTTPS. 
 
 ## Data Visualization Engines
+Having access to raw data from the sdrd files means we can basically use any type of visualization software, we like. The SDR Reporting module supports three types of data visuallization engines: RRDtool, the default time series database, R for advances data analysis and plotting and cpuplayer, a simple and intuitive movie player of multiprocessor server configuration. 
 
+## Forecasting
+To make projections about our computing infrastructure we associate computer system resources to queues. We solve these queues by a combination of algorithmic and numerical procedures. PDQ is our analytic solver, which is generally faster than a simulator and it simple to use. PDQ is open source software and available from PerfDynamics. 
