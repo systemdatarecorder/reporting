@@ -30,10 +30,12 @@ HTTP_CMD="${SDRREP_ROOT}/sbin/nginx"
 HTTP_CONF="${SDRREP_ROOT}/conf/nginx.conf"
 HTTP_PID="${SDRREP_ROOT}/logs/nginx.pid"
 HTTP_FCGI="${SDRREP_ROOT}/logs/fastcgi_temp"
+PLACK_PID="${SDRREP_ROOT}/logs/plack.pid"
+PLACK_CMD="${SDRREP_ROOT}/perl/bin/plackup ${SDRREP_ROOT}/mojo/script/sdr -s FCGI -l ${SDRREP_ROOT}/logs/plack_temp/sdr_auth.sock --pid ${PLACK_PID} --access-log ${SDRREP_ROOT}/logs/plack_access.log"
 NFCGI=1
 
 
-MODULES="http http-fcgi rrdcached"
+MODULES="http http-fcgi plack-fcgi rrdcached"
 
 # basedir test
 test -d ${BASEDIR} || exit 0
@@ -87,6 +89,30 @@ start() {
                 fi
             else
                 ${SDRREP_ROOT}/sbin/nginx-fcgi.boot ${HTTP_FCGI}/nginx-fcgi.sock $NFCGI
+                RETVAL=$?
+            fi
+
+            [ $RETVAL -eq 0 ] && echo "ok" || echo "failed"
+           ;;
+
+	   # plack fcgi server
+           plack\-fcgi)
+
+            if [ ! -d ${SDRREP_ROOT}/logs/plack_temp ]; then
+                mkdir ${SDRREP_ROOT}/logs/plack_temp
+            fi
+
+            if [ -f ${PLACK_PID} ]; then
+                kill -0 `cat ${PLACK_PID}` >/dev/null 2>&1
+                if [ $? -eq  1 ]; then
+                    rm ${PLACK_PID}
+                    $PLACK_CMD &
+                    RETVAL=$?
+                else
+                    RETVAL=1
+                fi
+            else
+                $PLACK_CMD 2>/dev/null &
                 RETVAL=$?
             fi
 
@@ -162,6 +188,19 @@ stop() {
            http\-fcgi)
             if [ -f ${HTTP_FCGI}/nginx-fcgi.pid ]; then
                 kill `cat ${HTTP_FCGI}/nginx-fcgi.pid` >/dev/null 2>&1
+                RETVAL=$?
+                [ $RETVAL -eq 0 ] && echo "ok" || echo "failed"
+            else
+                RETVAL=1
+                [ $RETVAL -eq 0 ] && echo "ok" || echo "failed"
+            fi
+           ;;
+
+
+	   # plack-fcgi server
+           plack\-fcgi)
+            if [ -f ${PLACK_PID} ]; then
+                kill `cat ${PLACK_PID}` >/dev/null 2>&1
                 RETVAL=$?
                 [ $RETVAL -eq 0 ] && echo "ok" || echo "failed"
             else
